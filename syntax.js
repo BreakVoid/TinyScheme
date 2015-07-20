@@ -67,8 +67,8 @@ exports.identifiers = {
 			result.type = "number-integer";
 			result.content = "0";
 			for (var i = 0; i < paras.length; ++i) {
-				var tmp = parseInt(paras[i].content);
-				result.content = (parseInt(result.content) + tmp).toString();
+				var tmp = crunch.parse(paras[i].content);
+				result.content = crunch.stringify(crunch.add(crunch.parse(result.content), tmp));
 			}
 			return result;
 		}
