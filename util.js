@@ -76,13 +76,15 @@ exports.GetType = function(str) {
 }
 
 exports.GetElements = function(str) {
-	console.log(str);
 	var result = [];
 	var content = "";
 	var lefcnt = 0;
 	for (var i = 0; i < str.length; ++i) {
 		if (lefcnt == 0) {
 			if (str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t') {
+				if (i == 0 || str[i - 1] == ' ' || str[i - 1] == '\n' || str[i - 1] == '\r' || str[i - 1] == '\t' ) {
+					continue;
+				}
 				if (content != "") {
 					var trimed_content = content.trim();
 					var item = {content : trimed_content};
@@ -93,11 +95,14 @@ exports.GetElements = function(str) {
 			} else {
 				content += str[i];
 				if (str[i] == '(') {
-					lefcnt = 1;
+					++lefcnt;
 				}
 			}
 		} else {
-			if (str[i] == ')') {
+			if (str[i] == '(') {
+				content += str[i];
+				++lefcnt;
+			} else if (str[i] == ')') {
 				content += str[i];
 				--lefcnt;
 				if (lefcnt == 0) {
@@ -110,7 +115,7 @@ exports.GetElements = function(str) {
 				continue;
 			} else if (str[i] == '\n') {
 				content += ' ';
-			} else if (str[i] == 'r') {
+			} else if (str[i] == '\r') {
 				continue;
 			} else if (str[i] == '\t') {
 				content += ' ';
