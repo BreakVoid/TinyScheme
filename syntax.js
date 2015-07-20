@@ -85,17 +85,102 @@ exports.identifiers = {
 	"-" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
-
+			var result = {};
+			result.type = "number-integer";
+			result.content = "0";
+			if (result.type == "number-integer") {
+				if (paras[0].type == "number-integer") {
+					result.content = paras[0].content;
+				} else {
+					result.type = "number-float";
+					result.content = parseFloat(result.content);
+					var tmp = parseFloat(paras[0].content);
+					result.content = tmp;
+				}
+			} else {
+				var tmp = parseFloat(paras[0].content);
+				result.content = tmp;
+			}
+			for (var i = 1; i < paras.length; ++i) {
+				if (result.type == "number-integer") {
+					if (paras[i].type == "number-integer") {
+						var tmp = crunch.parse(paras[i].content);
+						result.content = crunch.stringify(crunch.sub(crunch.parse(result.content), tmp));
+					} else {
+						result.type = "number-float";
+						result.content = parseFloat(result.content);
+						var tmp = parseFloat(paras[i].content);
+						result.content -= tmp;
+					}
+				} else {
+					var tmp = parseFloat(paras[i].content);
+					result.content -= tmp;
+				}
+			}
+			return result;
 		}
 	},
 	"*" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
+			var result = {};
+			result.type = "number-integer";
+			result.content = "1";
+			for (var i = 0; i < paras.length; ++i) {
+				if (result.type == "number-integer") {
+					if (paras[i].type == "number-integer") {
+						var tmp = crunch.parse(paras[i].content);
+						result.content = crunch.stringify(crunch.mul(crunch.parse(result.content), tmp));
+					} else {
+						result.type = "number-float";
+						result.content = parseFloat(result.content);
+						var tmp = parseFloat(paras[i].content);
+						result.content *= tmp;
+					}
+				} else {
+					var tmp = parseFloat(paras[i].content);
+					result.content *= tmp;
+				}
+			}
+			return result;
 		}
 	},
 	"/" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
+			var result = {};
+			result.type = "number-integer";
+			result.content = "0";
+			if (result.type == "number-integer") {
+				if (paras[0].type == "number-integer") {
+					result.content = paras[0].content;
+				} else {
+					result.type = "number-float";
+					result.content = parseFloat(result.content);
+					var tmp = parseFloat(paras[0].content);
+					result.content = tmp;
+				}
+			} else {
+				var tmp = parseFloat(paras[0].content);
+				result.content = tmp;
+			}
+			for (var i = 1; i < paras.length; ++i) {
+				if (result.type == "number-integer") {
+					if (paras[i].type == "number-integer") {
+						var tmp = crunch.parse(paras[i].content);
+						result.content = crunch.stringify(crunch.div(crunch.parse(result.content), tmp));
+					} else {
+						result.type = "number-float";
+						result.content = parseFloat(result.content);
+						var tmp = parseFloat(paras[i].content);
+						result.content /= tmp;
+					}
+				} else {
+					var tmp = parseFloat(paras[i].content);
+					result.content /= tmp;
+				}
+			}
+			return result;
 		}
 	},
 	">" : {
