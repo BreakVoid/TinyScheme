@@ -3,40 +3,68 @@ var util = require("./util.js");
 
 var memPool = {};
 var identifier = {};
+var TRUE_ID = util.genUUID();
+var FALSE_ID = util.genUUID();
+
+memPool[TRUE_ID] = {
+	"type" : "boolean",
+	"content" : true
+};
+memPool[FALSE_ID] = {
+	"type" : "boolean",
+	"content" : false
+};
 
 function ProcExec(str, curScope) {
-	// return a object {"type" : ...., "content" : ....}
-	var procParas = util.GetElements(str.slice(1, str.length - 1));
-	if (curScope[procParas[0].content].type == "syntax" && procParas[0].content != "define") {
-		var paraList = [];
-		for (var i = 1; i < procParas.length; ++i) {
-			if (procParas[i].type == "procedure") {
-				paraList.push(ProcExec(procParas[i].content, curScope));
-			} else if (procParas[i].type == "identifier") {
-				paraList.push(memPool[curScope[procParas[i].content].uuid]);
-			} else {
-				paraList.push(procParas[i]);
-			}
-		}
-		return curScope[procParas[0].content]["exec"](paraList, curScope);
+	// console.log("function ProcExec called");
+	// console.log(str);
+	var paras = util.GetElements(str.slice(1, str.length - 1));
+	// console.log(paras);
+	var procedureName = paras[0].content;
+	if (curScope[procedureName].type == "syntax") {
+		return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
 	} else {
 	}
 }
 
+function ProcessParas(raw_paras, curScope) {
+	// console.log("function ProcessParas called");
+	// console.log(raw_paras);
+	var result = [];
+	for (var i = 0; i < raw_paras.length; ++i) {
+		if (raw_paras[i].type == "procedure") {
+			result.push(ProcExec(raw_paras[i].content, curScope));
+		} else if (raw_paras[i].type == "identifier") {
+			result.push(memPool[curScope[raw_paras[i].content]["uuid"]]);
+		} else {
+			result.push(raw_paras[i]);
+		}
+	}
+	return result;
+}
+
 identifiers = {
+	"#t" : {
+		"type" : "identifier",
+		"uuid" : TRUE_ID
+	},
+	"#f" : {
+		"type" : "identifier",
+		"uuid" : FALSE_ID
+	},
 	"define" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
-			var result = {};
+			var result = { type : "define-result" };
 			if (paras[0].type == 'procedure') {
-				result.type = "function";
+				result.content_type = "function";
 				result.scope = curScope;
 				result.body = paras.slice(1, paras.length);
 				var functionForm = util.GetElements(paras[0]);
 				result.name = functionForm[0].content;
 				result.paraList = functionForm.slice(1, funtionForm.length);
 			} else {
-				result.type = util.GetType(paras[1].content);
+				result.content_type = util.GetType(paras[1].content);
 				result.content = paras[1].content;
 				result.name = paras[0].content;
 			}
@@ -46,6 +74,12 @@ identifiers = {
 	"if" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
+			var condition = ProcessParas(paras.slice(0, 1), curScope)[0];
+			if (condition.content) {
+				return ProcessParas(paras.slice(1, 2), curScope)[0];
+			} else {
+				return ProcessParas(paras.slice(2, 3), curScope)[0];
+			}
 		}
 	},
 	"cond" : {
@@ -72,14 +106,18 @@ identifiers = {
 	},
 	"show" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			// console.log("syntax show called");
+			var paras = ProcessParas(raw_paras, curScope);
 			console.log(paras[0].content);
 		}
 	},
 	"+" : {
 		//TO DO
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			// console.log(raw_paras);
+			var paras = ProcessParas(raw_paras, curScope);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "0";
@@ -104,7 +142,8 @@ identifiers = {
 	},
 	"-" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "0";
@@ -142,7 +181,8 @@ identifiers = {
 	},
 	"*" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "1";
@@ -167,7 +207,8 @@ identifiers = {
 	},
 	"/" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "0";
@@ -255,37 +296,22 @@ var data = fs.readFileSync("./src.scm", {encoding: 'utf8'});
 var sents = util.GetSentences(data);
 
 for (var i = 0; i < sents.length; ++i) {
-	var str = sents[i];
-	var procParas = util.GetElements(str.slice(1, str.length - 1));
-	if (procParas[0].content == "define") {
-		if (procParas[1].type == "procedure") {
-			var defRes = globalScope["define"]["exec"](procParas.slice(1, procParas.length), globalScope);
-			globalScope[defRes.name] = defRes;
-			delete globalScope[defRes.name].name;l
+	var processResult = ProcExec(sents[i], globalScope);
+	if (typeof processResult === "undefined") {
+		continue;
+	} else if (processResult.type == "define-result") {
+		if (processResult.content_type == "function") {
+			processResult.type = "function";
+			globalScope[processResult.name] = processResult;
+			delete globalScope[processResult.name].name;
 		} else {
-			var value = "";
-			if (procParas[2].type == "procedure") {
-				value = ProcExec(procParas[2].content, globalScope);
-				var defRes = globalScope["define"]["exec"]([procParas[1], value], globalScope);
-				var uuid = util.genUUID();
-				memPool[uuid] = defRes;
-				globalScope[defRes.name] = {
-					"uuid" : uuid,
-					"type" : "identifier"
-				};
-				delete globalScope[defRes.name].name;
-			} else {
-				var defRes = globalScope["define"]["exec"](procParas.slice(1, procParas.length), globalScope);
-				var uuid = util.genUUID();
-				memPool[uuid] = defRes;
-				globalScope[defRes.name] = {
-					"uuid" : uuid,
-					"type" : "identifier"
-				};
-				delete globalScope[defRes.name].name;
-			}
+			var uuid = util.genUUID();
+			memPool[uuid] = processResult;
+			globalScope[processResult.name] = {
+				"uuid" : uuid,
+				"type" : "identifier"
+			};
+			delete memPool[uuid].name;
 		}
-	} else {
-		ProcExec(sents[i], globalScope);
 	}
 }
