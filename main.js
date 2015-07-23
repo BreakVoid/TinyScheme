@@ -54,6 +54,10 @@ identifiers = {
 		"type" : "identifier",
 		"uuid" : FALSE_ID
 	},
+	"else" : {
+		"type" : "identifier",
+		"uuid" : TRUE_ID
+	},
 	"define" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
@@ -68,7 +72,7 @@ identifiers = {
 				result.paraList = functionForm.slice(1, functionForm.length);
 			} else {
 				result.content_type = util.GetType(paras[1].content);
-				result.content = paras[1].content;
+				result.content = ProcessParas(paras.slice(1, 2), curScope)[0].content;
 				result.name = paras[0].content;
 			}
 			return result;
@@ -88,7 +92,13 @@ identifiers = {
 	"cond" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
-
+			for (var i = 0; i < paras.length; ++i) {
+				var pp = util.GetElements(paras[i].content.slice(1, paras[i].content.length - 1));
+				var condition = ProcessParas(pp.slice(0, 1), curScope)[0].content;
+				if (condition) {
+					return ProcessParas(pp.slice(1, 2), curScope)[0];
+				}
+			}
 		}
 	},
 	"cons" : {

@@ -40,5 +40,10 @@
 (show (if (and (> 3 2) #t #f (< 4 10)) (* 12123 123) (= 4 4)))
 (show (if (or (< 3 2) #t #f (< 4 10)) (* 12123 2321) (= 4 4)))
 
+(define foo (if (> 78 12) (+ (+ 2 3) 3) (- (* 3 4 3) 1 2)))
+(show foo)
+
+(define rrr (cond ((= foo 9) 512) (else (/ 1287218 1213.2))))
+(show rrr)
 
 (define (square x) (* x x))
