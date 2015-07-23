@@ -15,6 +15,8 @@ memPool[FALSE_ID] = {
 	"content" : false
 };
 
+ProcessParas = function(raw_paras, curScope) {}
+
 function ProcExec(str, curScope) {
 	// console.log("function ProcExec called");
 	// console.log(str);
@@ -23,11 +25,11 @@ function ProcExec(str, curScope) {
 	var procedureName = paras[0].content;
 	if (curScope[procedureName].type == "syntax") {
 		return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
-	} else {
+	} else if (curScope[procedureName].type == "function") {
 	}
 }
 
-function ProcessParas(raw_paras, curScope) {
+ProcessParas = function(raw_paras, curScope) {
 	// console.log("function ProcessParas called");
 	// console.log(raw_paras);
 	var result = [];
@@ -60,9 +62,10 @@ identifiers = {
 				result.content_type = "function";
 				result.scope = curScope;
 				result.body = paras.slice(1, paras.length);
-				var functionForm = util.GetElements(paras[0]);
+				var functionForm = util.GetElements(paras[0].content.slice(1, paras[0].content.length - 1));
+				// console.log(functionForm);
 				result.name = functionForm[0].content;
-				result.paraList = functionForm.slice(1, funtionForm.length);
+				result.paraList = functionForm.slice(1, functionForm.length);
 			} else {
 				result.content_type = util.GetType(paras[1].content);
 				result.content = paras[1].content;
@@ -246,33 +249,117 @@ identifiers = {
 	},
 	">" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			var isFloat = false;
+			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
+				isFloat = true;
+			}
+			if (isFloat) {
+				var floatA = paras[0].content;
+				if (paras[0].type == "number-integer") {
+					floatA = parseFloat(floatA);
+				}
+				var floatB = paras[1].content;
+				if (paras[1].type == "number-integer") {
+					floatB = parseFloat(floatB);
+				}
+				return { type : "boolean", content : floatA > floatB};
+			} else {
+				var intA = crunch.parse(paras[0].content);
+				var intB = crunch.parse(paras[1].content);
+				return { type : "boolean", content : crunch.compare(intA, intB) == 1 };
+			}
 		}
 	},
 	"<" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			var isFloat = false;
+			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
+				isFloat = true;
+			}
+			if (isFloat) {
+				var floatA = paras[0].content;
+				if (paras[0].type == "number-integer") {
+					floatA = parseFloat(floatA);
+				}
+				var floatB = paras[1].content;
+				if (paras[1].type == "number-integer") {
+					floatB = parseFloat(floatB);
+				}
+				return { type : "boolean", content : floatA < floatB};
+			} else {
+				var intA = crunch.parse(paras[0].content);
+				var intB = crunch.parse(paras[1].content);
+				return { type : "boolean", content : crunch.compare(intA, intB) == -1 };
+			}
 		}
 	},
 	"=" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			var isFloat = false;
+			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
+				isFloat = true;
+			}
+			if (isFloat) {
+				var floatA = paras[0].content;
+				if (paras[0].type == "number-integer") {
+					floatA = parseFloat(floatA);
+				}
+				var floatB = paras[1].content;
+				if (paras[1].type == "number-integer") {
+					floatB = parseFloat(floatB);
+				}
+				return { type : "boolean", content : floatA == floatB};
+			} else {
+				var intA = crunch.parse(paras[0].content);
+				var intB = crunch.parse(paras[1].content);
+				return { type : "boolean", content : crunch.compare(intA, intB) == 0 };
+			}
 		}
 	},
 	//should support more than two expression
 	"and" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var result = true;
+			for (var i = 0; i < raw_paras.length; ++i) {
+				var para = ProcessParas(raw_paras.slice(i, i + 1), curScope)[0];
+				if (!para.content) {
+					result = false;
+					break;
+				}
+			}
+			return { type : "boolean", content : result};
 		}
 	},
 	"or" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var result = false;
+			for (var i = 0; i < raw_paras.length; ++i) {
+				var para = ProcessParas(raw_paras.slice(i, i + 1), curScope)[0];
+				if (para.content) {
+					result = true;
+					break;
+				}
+			}
+			return { type : "boolean", content : result };
 		}
 	},
 	"not" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var para = ProcessParas(raw_paras.slice(0, 1), curScope)[0];
+			if (para.content) {
+				return { type : "boolean", content : false };
+			} else {
+				return { type : "boolean", content : true };
+			}
 		}
 	},
 	"eq?" : {
