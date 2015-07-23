@@ -74,7 +74,17 @@ function ProcExec(str, curScope) {
 				}
 			}
 		}
-		return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope)
+		if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
+			return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
+		} else {
+			if (thisFunction.body[thisFunction.body.length - 1].type == "identifier") {
+				if (scope[thisFunction.body[thisFunction.body.length - 1].content].type == "identifier") {
+					return memPool[scope[thisFunction.body[thisFunction.body.length - 1].content].uuid];
+				} else {
+					return scope[thisFunction.body[thisFunction.body.length - 1].content];
+				}
+			}
+		}
 	}
 }
 

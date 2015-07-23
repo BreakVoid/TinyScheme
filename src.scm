@@ -55,3 +55,9 @@
 
 (show (if (compare > 3 2) (- 3 2) (- 2 3)))
 (show (if (compare < 3 2) (- 3 2) (- 2 3)))
+
+
+(define aaa 4)
+(define (id) aaa)
+(define (fun1 x) (id))
+(show (fun1 5))
