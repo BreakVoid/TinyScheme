@@ -29,23 +29,35 @@ function ProcExec(str, curScope) {
 		var thisFunction = curScope[procedureName];
 		var scope = thisFunction.scope;
 		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
+		// console.log(funcParas);
 		for (var i = 0; i < thisFunction.paraList.length; ++i) {
 			var processResult = ProcExec("(define " + thisFunction.paraList[i].content + " " + funcParas[i].content + ")", curScope);
-			var uuid = util.genUUID();
-			memPool[uuid] = processResult;
-			scope[processResult.name] = {
-				"uuid" : uuid,
-				"type" : "identifier"
-			};
+			// console.log(processResult);
+			if (processResult.content_type != "function" && processResult.content_type != "syntax") {
+				var uuid = util.genUUID();
+				memPool[uuid] = processResult;
+				memPool[uuid].type = processResult.content_type;
+				scope[processResult.name] = {
+					"uuid" : uuid,
+					"type" : "identifier"
+				};
+			} else {
+				scope[processResult.name] = processResult;
+				scope[processResult.name].type = processResult.content_type;
+			}
 			// delete memPool[uuid].name;
 		}
+
+		// console.log("scope after paras parsed.");
+		// console.log(scope);
+
 		for (var i = 0; i < thisFunction.body.length - 1; ++i) {
 			var processResult = ProcExec(thisFunction.body[i].content, scope);
 			if (typeof processResult === "undefined") {
 				continue;
 			} else if (processResult.type == "define-result") {
-				if (processResult.content_type == "function") {
-					processResult.type = "function";
+				if (processResult.content_type == "function" || processResult.content_type == "syntax") {
+					processResult.type = processResult.content_type;
 					scope[processResult.name] = processResult;
 					// delete scope[processResult.name].name;
 					// delete scope[processResult.name].content_type;
@@ -69,12 +81,21 @@ function ProcExec(str, curScope) {
 ProcessParas = function(raw_paras, curScope) {
 	// console.log("function ProcessParas called");
 	// console.log(raw_paras);
+	// console.log(raw_paras);
 	var result = [];
 	for (var i = 0; i < raw_paras.length; ++i) {
 		if (raw_paras[i].type == "procedure") {
 			result.push(ProcExec(raw_paras[i].content, curScope));
 		} else if (raw_paras[i].type == "identifier") {
-			result.push(memPool[curScope[raw_paras[i].content]["uuid"]]);
+			// console.log("**")
+			// console.log(curScope[raw_paras[i].content]);
+			if (curScope[raw_paras[i].content].type == "identifier") {
+				result.push(memPool[curScope[raw_paras[i].content]["uuid"]]);
+			} else if (curScope[raw_paras[i].content].type == "function" || curScope[raw_paras[i].content].type == "syntax") {
+				var tmp = curScope[raw_paras[i].content];
+				tmp.content = raw_paras[i].content;
+				result.push(tmp);
+			}
 		} else {
 			result.push(raw_paras[i]);
 		}
@@ -98,6 +119,8 @@ identifiers = {
 	"define" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
+			// console.log("define syntax called");
+			// console.log(paras);
 			var result = { type : "define-result" };
 			if (paras[0].type == 'procedure') {
 				result.content_type = "function";
@@ -108,8 +131,15 @@ identifiers = {
 				result.name = functionForm[0].content;
 				result.paraList = functionForm.slice(1, functionForm.length);
 			} else {
-				result.content_type = util.GetType(paras[1].content);
-				result.content = ProcessParas(paras.slice(1, 2), curScope)[0].content;
+				if (paras[1].type == "identifier") {
+					result = curScope[paras[1].content];
+					result.content_type = curScope[paras[1].content].type;
+					result.type = "define-result";
+				} else {
+					var realValue = ProcessParas(paras.slice(1, 2), curScope)[0];
+					result.content_type = realValue.type;
+					result.content = realValue.content;
+				}
 				result.name = paras[0].content;
 			}
 			return result;
@@ -118,6 +148,7 @@ identifiers = {
 	"if" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
+			// console.log(paras);
 			var condition = ProcessParas(paras.slice(0, 1), curScope)[0];
 			if (condition.content) {
 				return ProcessParas(paras.slice(1, 2), curScope)[0];

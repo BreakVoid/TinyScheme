@@ -49,3 +49,9 @@
 (define (square x) (* x x))
 
 (show (square (square 512)))
+
+(define (compare opt a b)
+	(opt a b))
+
+(show (if (compare > 3 2) (- 3 2) (- 2 3)))
+(show (if (compare < 3 2) (- 3 2) (- 2 3)))
