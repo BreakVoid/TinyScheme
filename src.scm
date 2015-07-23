@@ -47,3 +47,5 @@
 (show rrr)
 
 (define (square x) (* x x))
+
+(show (square (square 512)))

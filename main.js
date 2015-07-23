@@ -26,6 +26,43 @@ function ProcExec(str, curScope) {
 	if (curScope[procedureName].type == "syntax") {
 		return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
 	} else if (curScope[procedureName].type == "function") {
+		var thisFunction = curScope[procedureName];
+		var scope = thisFunction.scope;
+		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
+		for (var i = 0; i < thisFunction.paraList.length; ++i) {
+			var processResult = ProcExec("(define " + thisFunction.paraList[i].content + " " + funcParas[i].content + ")", curScope);
+			var uuid = util.genUUID();
+			memPool[uuid] = processResult;
+			scope[processResult.name] = {
+				"uuid" : uuid,
+				"type" : "identifier"
+			};
+			// delete memPool[uuid].name;
+		}
+		for (var i = 0; i < thisFunction.body.length - 1; ++i) {
+			var processResult = ProcExec(thisFunction.body[i].content, scope);
+			if (typeof processResult === "undefined") {
+				continue;
+			} else if (processResult.type == "define-result") {
+				if (processResult.content_type == "function") {
+					processResult.type = "function";
+					scope[processResult.name] = processResult;
+					// delete scope[processResult.name].name;
+					// delete scope[processResult.name].content_type;
+					// console.log(processResult);
+				} else {
+					var uuid = util.genUUID();
+					memPool[uuid] = processResult;
+					scope[processResult.name] = {
+						"uuid" : uuid,
+						"type" : "identifier"
+					};
+					// delete memPool[uuid].name;
+					// delete memPool[uuid].content_type;
+				}
+			}
+		}
+		return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope)
 	}
 }
 
@@ -400,7 +437,9 @@ for (var i = 0; i < sents.length; ++i) {
 		if (processResult.content_type == "function") {
 			processResult.type = "function";
 			globalScope[processResult.name] = processResult;
-			delete globalScope[processResult.name].name;
+			// delete globalScope[processResult.name].name;
+			// delete globalScope[processResult.name].content_type;
+			// console.log(processResult);
 		} else {
 			var uuid = util.genUUID();
 			memPool[uuid] = processResult;
@@ -408,7 +447,8 @@ for (var i = 0; i < sents.length; ++i) {
 				"uuid" : uuid,
 				"type" : "identifier"
 			};
-			delete memPool[uuid].name;
+			// delete memPool[uuid].name;
+			// delete memPool[uuid].content_type;
 		}
 	}
 }
