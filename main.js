@@ -54,7 +54,11 @@ function ProcExec(str, curScope) {
 	var procedureName = paras[0].content;
 	if (curScope[procedureName].type == "syntax") {
 		// console.log(curScope[procedureName]);
-		return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
+		if (procedureName == "define") {
+			return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope, curScope);
+		} else {
+			return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
+		}
 	} else if (curScope[procedureName].type == "function") {
 		// console.log("Custom function called");
 		// console.log(str);
@@ -65,49 +69,11 @@ function ProcExec(str, curScope) {
 		// console.log(funcParas);
 		for (var i = 0; i < thisFunction.paraList.length; ++i) {
 			// console.log(thisFunction.paraList[i].content + "=" + funcParas[i].content);
-			var processResult = curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope);
-			// console.log(processResult);
-			if (processResult.content_type != "function" && processResult.content_type != "syntax") {
-				var uuid = util.genUUID();
-				memPool[uuid] = processResult;
-				memPool[uuid].type = processResult.content_type;
-				scope[processResult.name] = {
-					"uuid" : uuid,
-					"type" : "identifier"
-				};
-			} else {
-				scope[processResult.name] = processResult;
-				scope[processResult.name].type = processResult.content_type;
-			}
-			// delete memPool[uuid].name;
+			curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
 		}
 
 		for (var i = 0; i < thisFunction.body.length - 1; ++i) {
-			var processResult = ProcExec(thisFunction.body[i].content, scope);
-			if (typeof processResult === "undefined") {
-				continue;
-			} else if (processResult.type == "define-result") {
-				if (processResult.content_type == "function" || processResult.content_type == "syntax") {
-					processResult.type = processResult.content_type;
-					scope[processResult.name] = processResult;
-					if (processResult.type == "function") {
-						scope[processResult.name].scope = scope;
-					}
-					// delete scope[processResult.name].name;
-					// delete scope[processResult.name].content_type;
-					// console.log(processResult);
-				} else {
-					var uuid = util.genUUID();
-					memPool[uuid] = processResult;
-					memPool[uuid].type = processResult.content_type;
-					scope[processResult.name] = {
-						"uuid" : uuid,
-						"type" : "identifier"
-					};
-					// delete memPool[uuid].name;
-					// delete memPool[uuid].content_type;
-				}
-			}
+			ProcExec(thisFunction.body[i].content, scope);
 		}
 		if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
 			return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
@@ -173,32 +139,38 @@ identifiers = {
 	},
 	"define" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(paras, curScope, targetScope) {
 			// console.log(paras);
 			// console.log("define syntax called");
-			// console.log(paras);
-			var result = { type : "define-result" };
+			var result = {};
 			if (paras[0].type == 'procedure') {
-				result.content_type = "function";
+				result.type = "function";
 				result.body = paras.slice(1, paras.length);
 				var functionForm = util.GetElements(paras[0].content.slice(1, paras[0].content.length - 1));
-				// console.log(functionForm);
-				result.name = functionForm[0].content;
+				var resultName = functionForm[0].content;
 				result.paraList = functionForm.slice(1, functionForm.length);
+				targetScope[resultName] = result;
+				targetScope[resultName].scope = targetScope;
 			} else {
+				var resultName = paras[0].content;
+				// console.log(resultName);
 				if (paras[1].type == "identifier" || paras[1].type == "syntax" || paras[1].type == "function") {
 					result = curScope[paras[1].content];
-					result.content_type = curScope[paras[1].content].type;
-					result.type = "define-result";
+					targetScope[resultName] = result;
 				} else {
 					var realValue = ProcessParas(paras.slice(1, 2), curScope)[0];
-					result = realValue;
-					result.content_type = realValue.type;
-					result.type = "define-result";
+					// console.log(realValue);
+					var uuid = util.genUUID();
+					memPool[uuid] = realValue;
+					result = {
+						"type" : "identifier",
+						"uuid" : uuid
+					};
+					// console.log(result);
+					// console.log(targetScope);
+					targetScope[resultName] = result;
 				}
-				result.name = paras[0].content;
 			}
-			return result;
 		}
 	},
 	"if" : {
@@ -588,33 +560,5 @@ var data = fs.readFileSync("./src.scm", {encoding: 'utf8'});
 var sents = util.GetSentences(data);
 
 for (var i = 0; i < sents.length; ++i) {
-	var processResult = ProcExec(sents[i], globalScope);
-	// console.log(globalScope);
-	// console.log(processResult);
-	if (typeof processResult === "undefined") {
-		continue;
-	} else if (processResult.type == "define-result") {
-		if (processResult.content_type == "function" || processResult.content_type == "syntax") {
-			processResult.type = processResult.content_type;
-			globalScope[processResult.name] = processResult;
-			if (processResult.content_type == "function") {
-				globalScope[processResult.name].scope = globalScope;
-			}
-			// delete globalScope[processResult.name].name;
-			// delete globalScope[processResult.name].content_type;
-			// console.log(processResult);
-		} else {
-			var uuid = util.genUUID();
-			memPool[uuid] = processResult;
-			memPool[uuid].type = processResult.content_type;
-			globalScope[processResult.name] = {
-				"uuid" : uuid,
-				"type" : "identifier"
-			};
-			// delete memPool[uuid].name;
-			// delete memPool[uuid].content_type;
-		}
-	} else {
-		// console.log(processResult);
-	}
+	ProcExec(sents[i], globalScope);
 }
