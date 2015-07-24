@@ -10,14 +10,14 @@ exports.IsIdentifier = function(str) {
 exports.GetSentences = function(str) {
 	var result = [];
 	var content = "";
-	var lefcnt = 0;
+	var roundBracketCnt = 0;
 	for (var i = 0; i < str.length; ++i) {
-		if (lefcnt == 0 && str[i] == '(') {
-			lefcnt = 1;
+		if (roundBracketCnt == 0 && str[i] == '(') {
+			roundBracketCnt = 1;
 			content = "(";
-		} else if (lefcnt == 1 && str[i] == ')') {
+		} else if (roundBracketCnt == 1 && str[i] == ')') {
 			result.push(content.trim() + ')');
-			lefcnt = 0;
+			roundBracketCnt = 0;
 			content = "";
 		} else {
 			if (str[i] == '\r') {
@@ -28,9 +28,9 @@ exports.GetSentences = function(str) {
 				content += str[i];
 			}
 			if (str[i] == '(') {
-				++lefcnt;
+				++roundBracketCnt;
 			} else if (str[i] == ')') {
-				--lefcnt;
+				--roundBracketCnt;
 			}
 		}
 	}
@@ -72,21 +72,47 @@ exports.GetType = function(str) {
 	if (str[0] == '(' && str[str.length - 1] == ')') {
 		return "procedure";
 	}
+	if (str[0] == '\'') {
+		return "text-value";
+	}
 	return "identifier";
 }
 
 exports.GetElements = function(str) {
 	var result = [];
 	var content = "";
-	var lefcnt = 0;
+	var roundBracketCnt = 0;
+	var needAppend = 0;
+	var quoteCnt = 0;
 	for (var i = 0; i < str.length; ++i) {
-		if (lefcnt == 0) {
+		if (quoteCnt) {
+			content += str[i];
+			if (str[i] == "\"") {
+				quoteCnt = 0;
+			}
+			continue;
+		}
+		if (str[i] == '\"') {
+			content += str[i];
+			quoteCnt = 1;
+			continue;
+		}
+		if (roundBracketCnt == 0) {
+			if (str[i] == '\'') {
+				content += "(quote ";
+				++needAppend;
+				continue;
+			}
 			if (str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t') {
 				if (i == 0 || str[i - 1] == ' ' || str[i - 1] == '\n' || str[i - 1] == '\r' || str[i - 1] == '\t' ) {
 					continue;
 				}
 				if (content != "") {
 					var trimed_content = content.trim();
+					while (needAppend > 0) {
+						--needAppend;
+						trimed_content += ")";
+					}
 					var item = {content : trimed_content};
 					item["type"] = exports.GetType(item.content);
 					result.push(item);
@@ -95,18 +121,22 @@ exports.GetElements = function(str) {
 			} else {
 				content += str[i];
 				if (str[i] == '(') {
-					++lefcnt;
+					++roundBracketCnt;
 				}
 			}
 		} else {
 			if (str[i] == '(') {
 				content += str[i];
-				++lefcnt;
+				++roundBracketCnt;
 			} else if (str[i] == ')') {
 				content += str[i];
-				--lefcnt;
-				if (lefcnt == 0) {
+				--roundBracketCnt;
+				if (roundBracketCnt == 0) {
 					var trimed_content = content.trim();
+					while (needAppend > 0) {
+						--needAppend;
+						trimed_content += ")";
+					}
 					var item = {content : trimed_content};
 					item["type"] = exports.GetType(item.content);
 					result.push(item);
@@ -126,6 +156,10 @@ exports.GetElements = function(str) {
 	}
 	if (content != "") {
 		var trimed_content = content.trim();
+		while (needAppend > 0) {
+			--needAppend;
+			trimed_content += ")";
+		}
 		var item = {content : trimed_content};
 		item["type"] = exports.GetType(item.content);
 		result.push(item);

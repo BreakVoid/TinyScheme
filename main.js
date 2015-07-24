@@ -24,14 +24,18 @@ function ProcExec(str, curScope) {
 	// console.log(paras);
 	var procedureName = paras[0].content;
 	if (curScope[procedureName].type == "syntax") {
+		// console.log(curScope[procedureName]);
 		return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
 	} else if (curScope[procedureName].type == "function") {
+		// console.log("Custom function called");
+		// console.log(str);
 		var thisFunction = curScope[procedureName];
 		var scope = thisFunction.scope;
 		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
 		// console.log(funcParas);
 		for (var i = 0; i < thisFunction.paraList.length; ++i) {
-			var processResult = ProcExec("(define " + thisFunction.paraList[i].content + " " + funcParas[i].content + ")", curScope);
+			// console.log(thisFunction.paraList[i].content + "=" + funcParas[i].content);
+			var processResult = curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope);
 			// console.log(processResult);
 			if (processResult.content_type != "function" && processResult.content_type != "syntax") {
 				var uuid = util.genUUID();
@@ -65,6 +69,7 @@ function ProcExec(str, curScope) {
 				} else {
 					var uuid = util.genUUID();
 					memPool[uuid] = processResult;
+					memPool[uuid].type = processResult.content_type;
 					scope[processResult.name] = {
 						"uuid" : uuid,
 						"type" : "identifier"
@@ -83,6 +88,8 @@ function ProcExec(str, curScope) {
 				} else {
 					return scope[thisFunction.body[thisFunction.body.length - 1].content];
 				}
+			} else {
+				return thisFunction.body[thisFunction.body.length - 1];
 			}
 		}
 	}
@@ -99,6 +106,7 @@ ProcessParas = function(raw_paras, curScope) {
 		} else if (raw_paras[i].type == "identifier") {
 			// console.log("**")
 			// console.log(curScope[raw_paras[i].content]);
+			// console.log(raw_paras[i]);
 			if (curScope[raw_paras[i].content].type == "identifier") {
 				result.push(memPool[curScope[raw_paras[i].content]["uuid"]]);
 			} else if (curScope[raw_paras[i].content].type == "function" || curScope[raw_paras[i].content].type == "syntax") {
@@ -110,6 +118,7 @@ ProcessParas = function(raw_paras, curScope) {
 			result.push(raw_paras[i]);
 		}
 	}
+	// console.log(result);
 	return result;
 }
 
@@ -129,6 +138,7 @@ identifiers = {
 	"define" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
+			// console.log(paras);
 			// console.log("define syntax called");
 			// console.log(paras);
 			var result = { type : "define-result" };
@@ -141,14 +151,15 @@ identifiers = {
 				result.name = functionForm[0].content;
 				result.paraList = functionForm.slice(1, functionForm.length);
 			} else {
-				if (paras[1].type == "identifier") {
+				if (paras[1].type == "identifier" || paras[1].type == "syntax" || paras[1].type == "function") {
 					result = curScope[paras[1].content];
 					result.content_type = curScope[paras[1].content].type;
 					result.type = "define-result";
 				} else {
 					var realValue = ProcessParas(paras.slice(1, 2), curScope)[0];
+					result = realValue;
 					result.content_type = realValue.type;
-					result.content = realValue.content;
+					result.type = "define-result";
 				}
 				result.name = paras[0].content;
 			}
@@ -179,6 +190,31 @@ identifiers = {
 			}
 		}
 	},
+	"quote" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var result = {};
+			if (raw_paras[0].type == "procedure") {
+				result.type = "list";
+				result.content = util.GetElements(raw_paras[0].content.slice(1, raw_paras[0].content.length - 1));
+			} else {
+				result.type = "text-value";
+				result.content = raw_paras[0].content;
+			}
+			return result;
+		}
+	},
+	"null?" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].content.length == 0) {
+				return { type : "boolean", content : true };
+			} else {
+				return { type : "boolean", content : false };
+			}
+		}
+	},
 	"cons" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
@@ -195,12 +231,32 @@ identifiers = {
 		"exec" : function(paras, curScope) {
 		}
 	},
-	"show" : {
+	"display" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			// console.log("syntax show called");
+			// console.log(raw_paras);
 			var paras = ProcessParas(raw_paras, curScope);
-			console.log(paras[0].content);
+			// console.log(paras);
+			if (paras[0].type == "list") {
+				var output = "(";
+				if (paras[0].content.length > 0) {
+					output += paras[0].content[0].content.toString();
+				}
+				for (var i = 1; i < paras[0].content.length; ++i) {
+					output += " " + paras[0].content[i].content.toString();
+				}
+				output += ')';
+				process.stdout.write(output);
+			} else {
+				process.stdout.write(paras[0].content.toString());
+			}
+		}
+	},
+	"newline" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			console.log("");
 		}
 	},
 	"+" : {
@@ -209,6 +265,7 @@ identifiers = {
 		"exec" : function(raw_paras, curScope) {
 			// console.log(raw_paras);
 			var paras = ProcessParas(raw_paras, curScope);
+			// console.log(paras);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "0";
@@ -235,6 +292,7 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
+			// console.log(paras);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "0";
@@ -274,6 +332,7 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
+			// console.log(paras);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "1";
@@ -301,7 +360,7 @@ identifiers = {
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
 			var result = {};
-			result.type = "number-integer";
+			result.type = "number-float";
 			result.content = "0";
 			if (result.type == "number-integer") {
 				if (paras[0].type == "number-integer") {
@@ -333,6 +392,26 @@ identifiers = {
 				}
 			}
 			return result;
+		}
+	},
+	"quotient" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			return {
+				content : crunch.stringify(crunch.div(crunch.parse(paras[0].content), crunch.parse(paras[1].content))),
+				type : "number-integer"
+			};
+		}
+	},
+	"modulo" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			return {
+				content : crunch.stringify(crunch.mod(crunch.parse(paras[0].content), crunch.parse(paras[1].content))),
+				type : "number-integer"
+			};
 		}
 	},
 	">" : {
@@ -472,11 +551,13 @@ var sents = util.GetSentences(data);
 
 for (var i = 0; i < sents.length; ++i) {
 	var processResult = ProcExec(sents[i], globalScope);
+	// console.log(globalScope);
+	// console.log(processResult);
 	if (typeof processResult === "undefined") {
 		continue;
 	} else if (processResult.type == "define-result") {
-		if (processResult.content_type == "function") {
-			processResult.type = "function";
+		if (processResult.content_type == "function" || processResult.content_type == "syntax") {
+			processResult.type = processResult.content_type;
 			globalScope[processResult.name] = processResult;
 			// delete globalScope[processResult.name].name;
 			// delete globalScope[processResult.name].content_type;
@@ -484,6 +565,7 @@ for (var i = 0; i < sents.length; ++i) {
 		} else {
 			var uuid = util.genUUID();
 			memPool[uuid] = processResult;
+			memPool[uuid].type = processResult.content_type;
 			globalScope[processResult.name] = {
 				"uuid" : uuid,
 				"type" : "identifier"
@@ -491,5 +573,7 @@ for (var i = 0; i < sents.length; ++i) {
 			// delete memPool[uuid].name;
 			// delete memPool[uuid].content_type;
 		}
+	} else {
+		// console.log(processResult);
 	}
 }

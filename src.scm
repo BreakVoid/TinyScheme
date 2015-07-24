@@ -1,3 +1,11 @@
+(define (show obj)
+  (display obj)
+  (newline))
+
+(define (title obj)
+  (newline)
+  (show obj))
+
 (show (+ 2 4))
 (show (+ 21344 23721 23127 234887421397431234987493128642373473647162347789347 34712384678796779354981327478973 -324823798561982347))
 (define x 23123123)
@@ -35,7 +43,7 @@
 (show (if #f 2 3))
 (show (if #f (+ 4 6) (- 92 3412)))
 (show (if (> 3 23) (+ 3 2) (- 2 3)))
-
+(show "-----------------------------")
 (show (if (and (> 3 2) #t #t (< 4 10)) (* 12123 123) (= 4 4)))
 (show (if (and (> 3 2) #t #f (< 4 10)) (* 12123 123) (= 4 4)))
 (show (if (or (< 3 2) #t #f (< 4 10)) (* 12123 2321) (= 4 4)))
@@ -61,3 +69,62 @@
 (define (id) aaa)
 (define (fun1 x) (id))
 (show (fun1 5))
+(fun1 11)
+(show (fun1 23))
+
+(define (double-opt fun x) (fun (fun x)))
+(show (double-opt square 16))
+
+(show (square (double-opt square (double-opt square 16))))
+
+(define (sqr x) (* x x))
+(define (my-odd? n) (= (modulo n 2) 1))
+
+(show "---------------------------------------------------------")
+
+(define (fast-exp a n)
+  (if (= n 0)
+      1
+      (if (my-odd? n)
+          (* a (sqr (fast-exp a (quotient n 2))))
+          (sqr (fast-exp a (quotient n 2))))))
+
+(show (fast-exp 2 0))
+(show (fast-exp 2 5))
+(show (fast-exp 2 100))
+
+(define _4 12345678901234567890)
+(define _5 98765432109876543210)
+(show (* (- _4 _5) (+ _4 200 _5)))
+
+(show '(1 2 3 4 5))
+(show ''(1 2 3 4 5))
+(show '''(1 2 23 4 2 2))
+
+(show (null? '()))
+(show (null? '(1)))
+
+(show "Test without side effect")
+
+
+(title "basic operations")
+(define _1 1)
+(define _2 2)
+(define (_3) 3)
+(show (+ _1 _2 (_3)))
+(show (- _2 (_3)))
+(show (* _2 (_3)))
+(show (/ _2 (_3)))
+(show (quotient _2 (_3)))
+(show (modulo _2 (_3)))
+(show (if (= _1 1)
+             (_3)
+             _2))
+
+(title "compute e")
+(define (computeE e k f m)
+  (if (> k m)
+      e
+      (computeE (+ e (/ 1.0 f)) (+ k 1) (* f k) m)))
+
+(show (computeE 0 1 1.0 100))
