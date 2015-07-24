@@ -1,5 +1,3 @@
-
-
 var crunch = require("number-crunch");
 var util = require("./util.js");
 
@@ -479,6 +477,11 @@ identifiers = {
 		}
 	},
 	"eq?" : {
+		"type" : "syntax",
+		"exec" : function(paras, curScope) {
+		}
+	},
+	"eqv?" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
 		}

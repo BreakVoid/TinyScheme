@@ -151,3 +151,11 @@
     (fib2 b (+ a b) (- n 1))))
 
 (show (fib2 1 1 19))
+
+
+(show (fast-exp 2 0))
+(show (fast-exp 2 5))
+(show (fast-exp 2 100))
+(show (fast-exp 2 0))
+(show (fast-exp 2 5))
+(show (fast-exp 2 1000))
