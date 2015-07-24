@@ -135,6 +135,12 @@ identifiers = {
 		"type" : "identifier",
 		"uuid" : TRUE_ID
 	},
+	"lambda" : {
+		"type" : "syntax",
+		"exec" : function(paras, curScope) {
+			var result = { type : "define-result" };
+		}
+	},
 	"define" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
