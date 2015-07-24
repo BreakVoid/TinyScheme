@@ -1,28 +1,4 @@
-function clone(objectToBeCloned) {
- 	// Basis.
-  	if (!(objectToBeCloned instanceof Object)) {
-   		return objectToBeCloned;
-  	}
 
-  	var objectClone;
-
-  	var Constructor = objectToBeCloned.constructor;
-  	switch (Constructor) {
-    	case RegExp:
-      		objectClone = new Constructor(objectToBeCloned);
-      		break;
-    	case Date:
-      		objectClone = new Constructor(objectToBeCloned.getTime());
-      		break;
-    	default:
-      		objectClone = new Constructor();
-  	}
-
-  	for (var prop in objectToBeCloned) {
-	    objectClone[prop] = objectToBeCloned[prop];
-  	}
-  	return objectClone;
-}
 
 var crunch = require("number-crunch");
 var util = require("./util.js");
@@ -55,7 +31,7 @@ function ProcExec(str, curScope) {
 	} else if (curScope[procedureName].type == "function") {
 
 		var thisFunction = curScope[procedureName];
-		var scope = clone(thisFunction.scope);
+		var scope = util.clone(thisFunction.scope);
 		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
 		for (var i = 0; i < thisFunction.paraList.length; ++i) {
 			curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
