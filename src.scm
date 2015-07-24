@@ -131,4 +131,12 @@
 	(if (< n 2)
 		1
 		(* n (factional (- n 1)))))
-(show (factional 100))
+(show (factional 10))
+
+(define (fib n)
+	(if (< n 2)
+		1
+		(+ (fib (- n 1))
+		   (fib (- n 2)))))
+
+(show (fib 10))

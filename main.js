@@ -29,6 +29,10 @@ function ProcExec(str, curScope) {
 	} else if (curScope[procedureName].type == "function") {
 		// console.log("Custom function called");
 		// console.log(str);
+		if (procedureName == "fib") {
+			console.log("fib function called:");
+			console.log(paras.slice(1, paras.length));
+		}
 		var thisFunction = curScope[procedureName];
 		var scope = thisFunction.scope;
 		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
@@ -51,9 +55,6 @@ function ProcExec(str, curScope) {
 			}
 			// delete memPool[uuid].name;
 		}
-
-		// console.log("scope after paras parsed.");
-		// console.log(scope);
 
 		for (var i = 0; i < thisFunction.body.length - 1; ++i) {
 			var processResult = ProcExec(thisFunction.body[i].content, scope);
@@ -450,7 +451,10 @@ identifiers = {
 	"<" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
+			console.log("less than called");
+			console.log(raw_paras);
 			var paras = ProcessParas(raw_paras, curScope);
+			console.log(paras);
 			var isFloat = false;
 			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
 				isFloat = true;
