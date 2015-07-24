@@ -6,10 +6,8 @@ function clone(objectToBeCloned) {
 
   	var objectClone;
 
-  	// Filter out special objects.
   	var Constructor = objectToBeCloned.constructor;
   	switch (Constructor) {
-	    // Implement other special objects here.
     	case RegExp:
       		objectClone = new Constructor(objectToBeCloned);
       		break;
@@ -20,7 +18,6 @@ function clone(objectToBeCloned) {
       		objectClone = new Constructor();
   	}
 
-  	// Clone each property.
   	for (var prop in objectToBeCloned) {
 	    objectClone[prop] = objectToBeCloned[prop];
   	}
@@ -47,28 +44,20 @@ memPool[FALSE_ID] = {
 ProcessParas = function(raw_paras, curScope) {}
 
 function ProcExec(str, curScope) {
-	// console.log("function ProcExec called");
-	// console.log(str);
 	var paras = util.GetElements(str.slice(1, str.length - 1));
-	// console.log(paras);
 	var procedureName = paras[0].content;
 	if (curScope[procedureName].type == "syntax") {
-		// console.log(curScope[procedureName]);
 		if (procedureName == "define") {
 			return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope, curScope);
 		} else {
 			return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
 		}
 	} else if (curScope[procedureName].type == "function") {
-		// console.log("Custom function called");
-		// console.log(str);
 
 		var thisFunction = curScope[procedureName];
 		var scope = clone(thisFunction.scope);
 		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
-		// console.log(funcParas);
 		for (var i = 0; i < thisFunction.paraList.length; ++i) {
-			// console.log(thisFunction.paraList[i].content + "=" + funcParas[i].content);
 			curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
 		}
 
@@ -92,17 +81,11 @@ function ProcExec(str, curScope) {
 }
 
 ProcessParas = function(raw_paras, curScope) {
-	// console.log("function ProcessParas called");
-	// console.log(raw_paras);
-	// console.log(raw_paras);
 	var result = [];
 	for (var i = 0; i < raw_paras.length; ++i) {
 		if (raw_paras[i].type == "procedure") {
 			result.push(ProcExec(raw_paras[i].content, curScope));
 		} else if (raw_paras[i].type == "identifier") {
-			// console.log("**")
-			// console.log(curScope[raw_paras[i].content]);
-			// console.log(raw_paras[i]);
 			if (curScope[raw_paras[i].content].type == "identifier") {
 				result.push(memPool[curScope[raw_paras[i].content]["uuid"]]);
 			} else if (curScope[raw_paras[i].content].type == "function" || curScope[raw_paras[i].content].type == "syntax") {
@@ -114,7 +97,6 @@ ProcessParas = function(raw_paras, curScope) {
 			result.push(raw_paras[i]);
 		}
 	}
-	// console.log(result);
 	return result;
 }
 
@@ -140,8 +122,6 @@ identifiers = {
 	"define" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope, targetScope) {
-			// console.log(paras);
-			// console.log("define syntax called");
 			var result = {};
 			if (paras[0].type == 'procedure') {
 				result.type = "function";
@@ -153,21 +133,17 @@ identifiers = {
 				targetScope[resultName].scope = targetScope;
 			} else {
 				var resultName = paras[0].content;
-				// console.log(resultName);
 				if (paras[1].type == "identifier" || paras[1].type == "syntax" || paras[1].type == "function") {
 					result = curScope[paras[1].content];
 					targetScope[resultName] = result;
 				} else {
 					var realValue = ProcessParas(paras.slice(1, 2), curScope)[0];
-					// console.log(realValue);
 					var uuid = util.genUUID();
 					memPool[uuid] = realValue;
 					result = {
 						"type" : "identifier",
 						"uuid" : uuid
 					};
-					// console.log(result);
-					// console.log(targetScope);
 					targetScope[resultName] = result;
 				}
 			}
@@ -176,7 +152,6 @@ identifiers = {
 	"if" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
-			// console.log(paras);
 			var condition = ProcessParas(paras.slice(0, 1), curScope)[0];
 			if (condition.content) {
 				return ProcessParas(paras.slice(1, 2), curScope)[0];
@@ -241,10 +216,7 @@ identifiers = {
 	"display" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-			// console.log("syntax show called");
-			// console.log(raw_paras);
 			var paras = ProcessParas(raw_paras, curScope);
-			// console.log(paras);
 			if (paras[0].type == "list") {
 				var output = "(";
 				if (paras[0].content.length > 0) {
@@ -267,12 +239,9 @@ identifiers = {
 		}
 	},
 	"+" : {
-		//TO DO
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-			// console.log(raw_paras);
 			var paras = ProcessParas(raw_paras, curScope);
-			// console.log(paras);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "0";
@@ -299,7 +268,6 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
-			// console.log(paras);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "0";
@@ -339,7 +307,6 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
-			// console.log(paras);
 			var result = {};
 			result.type = "number-integer";
 			result.content = "1";
@@ -449,10 +416,7 @@ identifiers = {
 	"<" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-			// console.log("less than called");
-			// console.log(raw_paras);
 			var paras = ProcessParas(raw_paras, curScope);
-			// console.log(paras);
 			var isFloat = false;
 			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
 				isFloat = true;
@@ -499,7 +463,6 @@ identifiers = {
 			}
 		}
 	},
-	//should support more than two expression
 	"and" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
