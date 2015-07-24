@@ -106,7 +106,6 @@
 
 (show "Test without side effect")
 
-
 (title "basic operations")
 (define _1 1)
 (define _2 2)
@@ -126,5 +125,4 @@
   (if (> k m)
       e
       (computeE (+ e (/ 1.0 f)) (+ k 1) (* f k) m)))
-
 (show (computeE 0 1 1.0 100))
