@@ -1,3 +1,32 @@
+function clone(objectToBeCloned) {
+ 	// Basis.
+  	if (!(objectToBeCloned instanceof Object)) {
+   		return objectToBeCloned;
+  	}
+
+  	var objectClone;
+
+  	// Filter out special objects.
+  	var Constructor = objectToBeCloned.constructor;
+  	switch (Constructor) {
+	    // Implement other special objects here.
+    	case RegExp:
+      		objectClone = new Constructor(objectToBeCloned);
+      		break;
+    	case Date:
+      		objectClone = new Constructor(objectToBeCloned.getTime());
+      		break;
+    	default:
+      		objectClone = new Constructor();
+  	}
+
+  	// Clone each property.
+  	for (var prop in objectToBeCloned) {
+	    objectClone[prop] = objectToBeCloned[prop];
+  	}
+  	return objectClone;
+}
+
 var crunch = require("number-crunch");
 var util = require("./util.js");
 
@@ -29,12 +58,9 @@ function ProcExec(str, curScope) {
 	} else if (curScope[procedureName].type == "function") {
 		// console.log("Custom function called");
 		// console.log(str);
-		if (procedureName == "fib") {
-			console.log("fib function called:");
-			console.log(paras.slice(1, paras.length));
-		}
+
 		var thisFunction = curScope[procedureName];
-		var scope = thisFunction.scope;
+		var scope = clone(thisFunction.scope);
 		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
 		// console.log(funcParas);
 		for (var i = 0; i < thisFunction.paraList.length; ++i) {
@@ -451,10 +477,10 @@ identifiers = {
 	"<" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-			console.log("less than called");
-			console.log(raw_paras);
+			// console.log("less than called");
+			// console.log(raw_paras);
 			var paras = ProcessParas(raw_paras, curScope);
-			console.log(paras);
+			// console.log(paras);
 			var isFloat = false;
 			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
 				isFloat = true;

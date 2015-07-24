@@ -139,4 +139,15 @@
 		(+ (fib (- n 1))
 		   (fib (- n 2)))))
 
-(show (fib 10))
+(show (fib 6))
+
+
+
+(show (fib 20))
+
+(define (fib2 a b n)
+  (if (= n 0)
+    b
+    (fib2 b (+ a b) (- n 1))))
+
+(show (fib2 1 1 19))
