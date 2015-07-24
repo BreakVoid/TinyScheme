@@ -63,6 +63,9 @@ function ProcExec(str, curScope) {
 				if (processResult.content_type == "function" || processResult.content_type == "syntax") {
 					processResult.type = processResult.content_type;
 					scope[processResult.name] = processResult;
+					if (processResult.type == "function") {
+						scope[processResult.name].scope = scope;
+					}
 					// delete scope[processResult.name].name;
 					// delete scope[processResult.name].content_type;
 					// console.log(processResult);
@@ -150,7 +153,6 @@ identifiers = {
 			var result = { type : "define-result" };
 			if (paras[0].type == 'procedure') {
 				result.content_type = "function";
-				result.scope = curScope;
 				result.body = paras.slice(1, paras.length);
 				var functionForm = util.GetElements(paras[0].content.slice(1, paras[0].content.length - 1));
 				// console.log(functionForm);
@@ -565,6 +567,9 @@ for (var i = 0; i < sents.length; ++i) {
 		if (processResult.content_type == "function" || processResult.content_type == "syntax") {
 			processResult.type = processResult.content_type;
 			globalScope[processResult.name] = processResult;
+			if (processResult.content_type == "function") {
+				globalScope[processResult.name].scope = globalScope;
+			}
 			// delete globalScope[processResult.name].name;
 			// delete globalScope[processResult.name].content_type;
 			// console.log(processResult);

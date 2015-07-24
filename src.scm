@@ -126,3 +126,9 @@
       e
       (computeE (+ e (/ 1.0 f)) (+ k 1) (* f k) m)))
 (show (computeE 0 1 1.0 100))
+
+(define (factional n)
+	(if (< n 2)
+		1
+		(* n (factional (- n 1)))))
+(show (factional 100))
