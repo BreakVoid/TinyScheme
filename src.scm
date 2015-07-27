@@ -67,7 +67,7 @@
 
 (define aaa 4)
 (define (id) aaa)
-(define (fun1 x) (id))
+(define (fun1 aaa) (id))
 (show (fun1 5))
 (fun1 11)
 (show (fun1 23))
@@ -125,7 +125,7 @@
   (if (> k m)
       e
       (computeE (+ e (/ 1.0 f)) (+ k 1) (* f k) m)))
-(show (computeE 0 1 1.0 100))
+(show (computeE 0 1 1.0 1000))
 
 (define (factional n)
 	(if (< n 2)
@@ -159,3 +159,13 @@
 (show (fast-exp 2 0))
 (show (fast-exp 2 5))
 (show (fast-exp 2 1000))
+
+(define quick-pow (lambda (a n)
+  (if (= n 0)
+    1
+    (if (= (modulo n 2) 1)
+      (* (quick-pow (* a a) (quotient n 2)) a)
+      (quick-pow (* a a) (quotient n 2))))))
+
+(show (quick-pow 2 0))
+(show (quick-pow 2 5))

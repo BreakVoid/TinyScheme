@@ -90,7 +90,11 @@ identifiers = {
 	"lambda" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
-			var result = { type : "define-result" };
+			var result = { "type" : "function" };
+			var functionForm = util.GetElements(paras[0].content.slice(1, paras[0].content.length - 1));
+			result.paraList = functionForm.slice(0, functionForm.length);
+			result.body = paras.slice(1, paras.length);
+			return result;
 		}
 	},
 	"define" : {
@@ -112,6 +116,12 @@ identifiers = {
 					targetScope[resultName] = result;
 				} else {
 					var realValue = ProcessParas(paras.slice(1, 2), curScope)[0];
+					if (realValue.type == "function" || realValue.type == "syntax") {
+						result = realValue;
+						targetScope[resultName] = result;
+						result.scope = targetScope;
+						return ;
+					}
 					var uuid = util.genUUID();
 					memPool[uuid] = realValue;
 					result = {
