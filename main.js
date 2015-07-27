@@ -211,7 +211,7 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras,curScope);
-			return paras[0];
+			return paras[0].content[0];
 		}
 	},
 	"cdr" : {

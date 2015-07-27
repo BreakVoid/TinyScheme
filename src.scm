@@ -185,3 +185,16 @@
       (cons start (interval (+ start 1) end))))
 
 (show (interval 1 20))
+
+(define (filter pred? lst)
+  (if (null? lst)
+      '()
+      (if (pred? (car lst))
+          (cons (car lst) (filter pred? (cdr lst)))
+          (filter pred? (cdr lst)))))
+
+(define lst1-to50 (interval 1 51))
+(define (greater-than25 x)
+  (> x 25))
+
+(show (filter greater-than25 lst1-to50))
