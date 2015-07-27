@@ -169,3 +169,19 @@
 
 (show (quick-pow 2 0))
 (show (quick-pow 2 5))
+
+(define lst1 '(2 3 4))
+(define lst2 (cons 1 lst1))
+(show lst2)
+(show (cons 0 (cons 1 lst1)))
+(show (car lst1))
+(show (car lst2))
+(show (cdr lst1))
+(show (cdr lst2))
+
+(define (interval start end)
+  (if (= start end)
+      '()
+      (cons start (interval (+ start 1) end))))
+
+(show (interval 1 20))

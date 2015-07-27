@@ -181,20 +181,44 @@ identifiers = {
 			}
 		}
 	},
+	"let" : {
+
+	},
+	"let*" : {
+
+	},
+	"letrec" : {
+
+	},
 	"cons" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
-
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			// console.log(paras);
+			// console.log(paras[1].content);
+			var result = {};
+			result.content = [];
+			result.type = "list";
+			result.content.push(paras[0]);
+			for (var i = 0; i < paras[1].content.length; ++i) {
+				result.content.push(paras[1].content[i]);
+			}
+			// console.log(result);
+			return result;
 		}
 	},
 	"car" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras,curScope);
+			return paras[0];
 		}
 	},
 	"cdr" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			return { "type" : "list", "content" : paras[0].content.slice(1, paras[0].content.length)};
 		}
 	},
 	"display" : {
