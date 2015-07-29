@@ -220,8 +220,36 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			if (raw_paras[0].type != "identifier") {
-				var letName = raw_paras[0].content;
+				// console.log(raw_paras);
+				var letBody = raw_paras.slice(1, raw_paras.length);
+				var localVarPairs = util.GetElements(raw_paras[0].content.slice(1, raw_paras[0].content.length - 1));
+				// console.log(localVarPairs);
+				var localVarNames = [];
+				var localVarValues = [];
+				for (var i = 0; i < localVarPairs.length; ++i) {
+					var tmp = util.GetElements(localVarPairs[i].content.slice(1, localVarPairs[i].content.length - 1));
+					localVarNames.push(tmp[0]);
+					localVarValues.push(tmp[1]);
 
+				}
+				// console.log(localVarNames);
+				// console.log(localVarValues);
+				var convertResult = "((lambda (";
+				convertResult += localVarNames[0].content;
+				for (var i = 1; i < localVarNames.length; ++i) {
+					convertResult += " " + localVarNames[i].content;
+				}
+				convertResult += ')';
+				for (var i = 0; i < letBody.length; ++i) {
+					convertResult += " " + letBody[i].content;
+				}
+				convertResult += ')';
+				for (var i = 0; i < localVarValues.length; ++i) {
+					convertResult += " " + localVarValues[i].content;
+				}
+				convertResult += ")";
+				// console.log("let ===: " + convertResult);
+				return ProcExec(convertResult, curScope);
 			} else {
 
 			}
@@ -230,7 +258,25 @@ identifiers = {
 	"let*" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
+			if (raw_paras[0].type != "identifier") {
+				// console.log(raw_paras);
+				var letBody = raw_paras.slice(1, raw_paras.length);
+				var localVarPairs = util.GetElements(raw_paras[0].content.slice(1, raw_paras[0].content.length - 1));
+				// console.log(localVarPairs);
+				var END = "";
+				var convertResult = "";
+				for (var i = 0; i < localVarPairs.length; ++i) {
+					convertResult += "(let (" + localVarPairs[i].content + ") ";
+					END += ")";
+				}
+				for (var i = 0; i < letBody.length; ++i) {
+					convertResult += " " + letBody[i].content;
+				}
+				convertResult += END;
+				return ProcExec(convertResult, curScope);
+			} else {
 
+			}
 		}
 	},
 	"letrec" : {

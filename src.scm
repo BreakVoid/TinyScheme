@@ -198,4 +198,15 @@
   (> x 25))
 
 (show (filter greater-than25 lst1-to50))
-(show ((lambda (n) (+ n n)) 5))
+(show
+  ((lambda (n) (+ n n)) 5))
+
+(show
+  (let ((x 2) (y 3))
+  (* x y)))
+
+(show
+  (let ((x 2) (y 3))
+  (let* ((x 7)
+         (z (+ x y)))
+    (* z x))))
