@@ -282,7 +282,47 @@ identifiers = {
 	"letrec" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
+			if (raw_paras[0].type != "identifier") {
+				// console.log(raw_paras);
+				var letBody = raw_paras.slice(1, raw_paras.length);
+				var localVarPairs = util.GetElements(raw_paras[0].content.slice(1, raw_paras[0].content.length - 1));
+				var scope = util.clone(curScope);
+				// console.log(localVarPairs);
+				var localVarNames = [];
+				var localVarValues = [];
+				for (var i = 0; i < localVarPairs.length; ++i) {
+					var tmp = util.GetElements(localVarPairs[i].content.slice(1, localVarPairs[i].content.length - 1));
+					localVarNames.push(tmp[0]);
+					localVarValues.push(tmp[1]);
 
+				}
+				// console.log(localVarNames);
+				// console.log(localVarValues);
+				for (var i = 0; i < localVarPairs.length; ++i) {
+					ProcExec("(define " + localVarNames[i].content + ".1 " + localVarValues[i].content + ")", scope);
+				}
+				for (var i = 0; i < localVarPairs.length; ++i) {
+					scope[localVarNames[i].content] = scope[localVarNames[i].content + ".1"];
+				}
+				for (var i = 0; i < letBody.length - 1; ++i) {
+					ProcExec(letBody[i].content, scope);
+				}
+				if (letBody[letBody.length - 1].type == "procedure") {
+					return ProcExec(letBody[letBody.length - 1].content, scope);
+				} else {
+					if (letBody[letBody.length - 1].type == "identifier") {
+						if (scope[letBody[letBody.length - 1].content].type == "identifier") {
+							return memPool[scope[letBody[letBody.length - 1].content].uuid];
+						} else {
+							return scope[letBody[letBody.length - 1].content];
+						}
+					} else {
+						return letBody[letBody.length - 1];
+					}
+				}
+			} else {
+
+			}
 		}
 	},
 	"cons" : {
@@ -618,6 +658,21 @@ identifiers = {
 	"equal?" : {
 		"type" : "syntax",
 		"exec" : function(paras, curScope) {
+		}
+	},
+	"zero?" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].type == "number-integer" || paras[0].type == "number-float") {
+				if (paras[0].type == "number-integer") {
+					return { type : "boolean", content : paras[0].content == "0" || paras[0].content == "-0" };
+				} else {
+					return { type : "boolean", content : paras[0].content == 0.0 };
+				}
+			} else {
+				return { type : "boolean", content : false };
+			}
 		}
 	}
 };

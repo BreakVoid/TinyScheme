@@ -133,26 +133,6 @@
 		(* n (factional (- n 1)))))
 (show (factional 10))
 
-(define (fib n)
-	(if (< n 2)
-		1
-		(+ (fib (- n 1))
-		   (fib (- n 2)))))
-
-(show (fib 6))
-
-
-
-(show (fib 20))
-
-(define (fib2 a b n)
-  (if (= n 0)
-    b
-    (fib2 b (+ a b) (- n 1))))
-
-(show (fib2 1 1 19))
-
-
 (show (fast-exp 2 0))
 (show (fast-exp 2 5))
 (show (fast-exp 2 100))
@@ -210,3 +190,30 @@
   (let* ((x 7)
          (z (+ x y)))
     (* z x))))
+
+(show
+  (letrec ((even?
+          (lambda (n)
+            (if (zero? n)
+                #t
+                (odd? (- n 1)))))
+         (odd?
+          (lambda (n)
+            (if (zero? n)
+                #f
+                (even? (- n 1))))))
+  (even? 88)))
+
+
+(title "fibonacci sequence")
+(define fib
+  (lambda (n)
+    (letrec ((calc-fib (lambda (prev now n)
+                         (if (= n 0)
+                             prev
+                             (calc-fib now (+ prev now) (- n 1))))))
+      (calc-fib 0 1 n))))
+
+(show (fib 5))
+(show (fib 20))
+(show (fib 32))
