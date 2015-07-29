@@ -10,6 +10,7 @@ A tiny Scheme interpreter written by javascript
 -the syntax `let' is interpretered by an equivalent way.
 
     (let ((variable init) ...) expression expression ...)
+    -----------------------
     ((lambda (variable ...) expression expression ...) init ...)
 
 -the syntax `let*' is interpretered by an equivalent way.
@@ -20,7 +21,7 @@ A tiny Scheme interpreter written by javascript
        (variableN initN))
        expression
        expression ...)
-
+    -----------------------
     (let ((variable1 init1))
     	(let ((variable2 init2))
     		...
@@ -28,3 +29,32 @@ A tiny Scheme interpreter written by javascript
     			expression
     			expression ...)
     		...))
+
+-the syntax `lerec' is interpretered by an equivalent way like:
+
+    (letrec ((even?
+            (lambda (n)
+              (if (zero? n)
+                  #t
+                  (odd? (- n 1)))))
+           (odd?
+            (lambda (n)
+              (if (zero? n)
+                  #f
+                  (even? (- n 1))))))
+    (even? 88))
+    -----------------------
+    ((lambda ()
+    	(define even?.1
+    		(lambda (n)
+              (if (zero? n)
+                  #t
+                  (odd? (- n 1)))))
+        (define odd?.1
+        	(lambda (n)
+              (if (zero? n)
+                  #f
+                  (even? (- n 1)))))
+        (define even? even?.1)
+        (define odd? odd?.1)
+        (even? 88)))
