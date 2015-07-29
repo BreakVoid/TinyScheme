@@ -19,37 +19,72 @@ ProcessParas = function(raw_paras, curScope) {}
 
 function ProcExec(str, curScope) {
 	var paras = util.GetElements(str.slice(1, str.length - 1));
-	var procedureName = paras[0].content;
-	if (curScope[procedureName].type == "syntax") {
-		if (procedureName == "define") {
-			return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope, curScope);
-		} else {
-			return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
-		}
-	} else if (curScope[procedureName].type == "function") {
-
-		var thisFunction = curScope[procedureName];
-		var scope = util.clone(thisFunction.scope);
-		var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
-		for (var i = 0; i < thisFunction.paraList.length; ++i) {
-			curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
-		}
-
-		for (var i = 0; i < thisFunction.body.length - 1; ++i) {
-			ProcExec(thisFunction.body[i].content, scope);
-		}
-		if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
-			return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
-		} else {
-			if (thisFunction.body[thisFunction.body.length - 1].type == "identifier") {
-				if (scope[thisFunction.body[thisFunction.body.length - 1].content].type == "identifier") {
-					return memPool[scope[thisFunction.body[thisFunction.body.length - 1].content].uuid];
-				} else {
-					return scope[thisFunction.body[thisFunction.body.length - 1].content];
-				}
+	if (paras[0].type == "procedure") {
+		var firstProcessResult = ProcExec(paras[0].content, curScope);
+		if (firstProcessResult.type = "function") {
+			var thisFunction = firstProcessResult;
+			var scope;
+			if (typeof thisFunction.scope == "undefined") {
+				scope = util.clone(curScope);
 			} else {
-				return thisFunction.body[thisFunction.body.length - 1];
+				scope = util.clone(thisFunction.scope);
 			}
+			var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
+			for (var i = 0; i < thisFunction.paraList.length; ++i) {
+				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
+			}
+
+			for (var i = 0; i < thisFunction.body.length - 1; ++i) {
+				ProcExec(thisFunction.body[i].content, scope);
+			}
+			if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
+				return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
+			} else {
+				if (thisFunction.body[thisFunction.body.length - 1].type == "identifier") {
+					if (scope[thisFunction.body[thisFunction.body.length - 1].content].type == "identifier") {
+						return memPool[scope[thisFunction.body[thisFunction.body.length - 1].content].uuid];
+					} else {
+						return scope[thisFunction.body[thisFunction.body.length - 1].content];
+					}
+				} else {
+					return thisFunction.body[thisFunction.body.length - 1];
+				}
+			}
+		}
+	} else {
+		var procedureName = paras[0].content;
+		if (curScope[procedureName].type == "syntax") {
+			if (procedureName == "define") {
+				return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope, curScope);
+			} else {
+				return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
+			}
+		} else if (curScope[procedureName].type == "function") {
+
+			var thisFunction = curScope[procedureName];
+			var scope = util.clone(thisFunction.scope);
+			var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
+			for (var i = 0; i < thisFunction.paraList.length; ++i) {
+				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
+			}
+
+			for (var i = 0; i < thisFunction.body.length - 1; ++i) {
+				ProcExec(thisFunction.body[i].content, scope);
+			}
+			if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
+				return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
+			} else {
+				if (thisFunction.body[thisFunction.body.length - 1].type == "identifier") {
+					if (scope[thisFunction.body[thisFunction.body.length - 1].content].type == "identifier") {
+						return memPool[scope[thisFunction.body[thisFunction.body.length - 1].content].uuid];
+					} else {
+						return scope[thisFunction.body[thisFunction.body.length - 1].content];
+					}
+				} else {
+					return thisFunction.body[thisFunction.body.length - 1];
+				}
+			}
+
 		}
 	}
 }
@@ -182,13 +217,27 @@ identifiers = {
 		}
 	},
 	"let" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			if (raw_paras[0].type != "identifier") {
+				var letName = raw_paras[0].content;
 
+			} else {
+
+			}
+		}
 	},
 	"let*" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
 
+		}
 	},
 	"letrec" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
 
+		}
 	},
 	"cons" : {
 		"type" : "syntax",

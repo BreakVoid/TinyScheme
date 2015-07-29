@@ -198,3 +198,4 @@
   (> x 25))
 
 (show (filter greater-than25 lst1-to50))
+(show ((lambda (n) (+ n n)) 5))
