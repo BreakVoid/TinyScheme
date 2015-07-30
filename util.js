@@ -202,3 +202,20 @@ exports.clone = function(objectToBeCloned) {
   	}
   	return objectClone;
 }
+
+exports.DisplayRecursively = function(lst) {
+	var result = "(";
+	for (var i = 0; i < lst.content.length - 1; ++i) {
+		if (lst.content[i].type == "list") {
+			result += exports.DisplayRecursively(lst.content[i]) + " ";
+		} else {
+			result += lst.content[i].content + " ";
+		}
+	}
+	if (lst.content[lst.content.length - 1].type == "list") {
+		result += exports.DisplayRecursively(lst.content[lst.content.length - 1]) + ")";
+	} else {
+		result += lst.content[lst.content.length - 1].content + ")";
+	}
+	return result;
+}

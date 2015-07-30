@@ -233,3 +233,6 @@
 (show (fib 5))
 (show (fib 20))
 (show (fib 32))
+
+(show (cons
+  '(1 2 3 4 5) '(1 2 3 4 6)))

@@ -168,54 +168,6 @@ identifiers = {
 			}
 		}
 	},
-	"if" : {
-		"type" : "syntax",
-		"exec" : function(paras, curScope) {
-			var condition = ProcessParas(paras.slice(0, 1), curScope)[0];
-			if (condition.content) {
-				return ProcessParas(paras.slice(1, 2), curScope)[0];
-			} else {
-				return ProcessParas(paras.slice(2, 3), curScope)[0];
-			}
-		}
-	},
-	"cond" : {
-		"type" : "syntax",
-		"exec" : function(paras, curScope) {
-			for (var i = 0; i < paras.length; ++i) {
-				var pp = util.GetElements(paras[i].content.slice(1, paras[i].content.length - 1));
-				var condition = ProcessParas(pp.slice(0, 1), curScope)[0].content;
-				if (condition) {
-					return ProcessParas(pp.slice(1, 2), curScope)[0];
-				}
-			}
-		}
-	},
-	"quote" : {
-		"type" : "syntax",
-		"exec" : function(raw_paras, curScope) {
-			var result = {};
-			if (raw_paras[0].type == "procedure") {
-				result.type = "list";
-				result.content = util.GetElements(raw_paras[0].content.slice(1, raw_paras[0].content.length - 1));
-			} else {
-				result.type = "text-value";
-				result.content = raw_paras[0].content;
-			}
-			return result;
-		}
-	},
-	"null?" : {
-		"type" : "syntax",
-		"exec" : function(raw_paras, curScope) {
-			var paras = ProcessParas(raw_paras, curScope);
-			if (paras[0].content.length == 0) {
-				return { type : "boolean", content : true };
-			} else {
-				return { type : "boolean", content : false };
-			}
-		}
-	},
 	"let" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
@@ -325,6 +277,54 @@ identifiers = {
 			}
 		}
 	},
+	"if" : {
+		"type" : "syntax",
+		"exec" : function(paras, curScope) {
+			var condition = ProcessParas(paras.slice(0, 1), curScope)[0];
+			if (condition.content) {
+				return ProcessParas(paras.slice(1, 2), curScope)[0];
+			} else {
+				return ProcessParas(paras.slice(2, 3), curScope)[0];
+			}
+		}
+	},
+	"cond" : {
+		"type" : "syntax",
+		"exec" : function(paras, curScope) {
+			for (var i = 0; i < paras.length; ++i) {
+				var pp = util.GetElements(paras[i].content.slice(1, paras[i].content.length - 1));
+				var condition = ProcessParas(pp.slice(0, 1), curScope)[0].content;
+				if (condition) {
+					return ProcessParas(pp.slice(1, 2), curScope)[0];
+				}
+			}
+		}
+	},
+	"quote" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var result = {};
+			if (raw_paras[0].type == "procedure") {
+				result.type = "list";
+				result.content = util.GetElements(raw_paras[0].content.slice(1, raw_paras[0].content.length - 1));
+			} else {
+				result.type = "text-value";
+				result.content = raw_paras[0].content;
+			}
+			return result;
+		}
+	},
+	"null?" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].content.length == 0) {
+				return { type : "boolean", content : true };
+			} else {
+				return { type : "boolean", content : false };
+			}
+		}
+	},
 	"cons" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
@@ -361,15 +361,7 @@ identifiers = {
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
 			if (paras[0].type == "list") {
-				var output = "(";
-				if (paras[0].content.length > 0) {
-					output += paras[0].content[0].content.toString();
-				}
-				for (var i = 1; i < paras[0].content.length; ++i) {
-					output += " " + paras[0].content[i].content.toString();
-				}
-				output += ')';
-				process.stdout.write(output);
+				process.stdout.write(util.DisplayRecursively(paras[0]));
 			} else {
 				process.stdout.write(paras[0].content.toString());
 			}
