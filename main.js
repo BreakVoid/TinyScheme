@@ -168,6 +168,18 @@ identifiers = {
 			}
 		}
 	},
+	"map" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+
+		}
+	},
+	"apply" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+
+		}
+	},
 	"let" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
@@ -358,6 +370,33 @@ identifiers = {
 			var result = {
 				"type" : "list",
 				"content" : paras
+			};
+			return result;
+		}
+	},
+	"append" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			var result = {
+				"type" : "list",
+				"content" : []
+			};
+			for (var i = 0; i < paras.length; ++i) {
+				for (var j = 0; j < paras[i].content.length; ++j) {
+					result.content.push(paras[i].content[j]);
+				}
+			}
+			return result;
+		}
+	},
+	"length" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			var result = {
+				"type" : "number-integer",
+				"content" : paras[0].content.length.toString()
 			};
 			return result;
 		}

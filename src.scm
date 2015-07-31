@@ -6,6 +6,32 @@
   (newline)
   (show obj))
 
+(define (filter pred? lst)
+  (if (null? lst)
+      '()
+      (if (pred? (car lst))
+          (cons (car lst) (filter pred? (cdr lst)))
+          (filter pred? (cdr lst)))))
+
+(define (flatmap func lst)
+  (apply append (map func lst)))
+
+(define (interval start end)
+  (if (= start end)
+      '()
+      (cons start (interval (+ start 1) end))))
+
+(define (any-of? pred? lst)
+  (if (null? lst)
+      #f
+      (or (pred? (car lst)) (any-of? pred? (cdr lst)))))
+(define (none-of? pred? lst)
+  (not (any-of? pred? lst)))
+(define (all-of? pred? lst)
+  (if (null? lst)
+      #t
+      (and (pred? (car lst)) (all-of? pred? (cdr lst)))))
+
 (show (+ 2 4))
 (show (+ 21344 23721 23127 234887421397431234987493128642373473647162347789347 34712384678796779354981327478973 -324823798561982347))
 (define x 23123123)
@@ -247,3 +273,12 @@
 (show
   (list 'a (+ 3 4) 'c))
 (show (list))
+
+(show
+  (append '(x) '(y)))
+
+(show
+  (append '(a (b)) '((c))))
+(show
+  (append '(a b) '(c . d)))
+
