@@ -204,6 +204,9 @@ exports.clone = function(objectToBeCloned) {
 }
 
 exports.DisplayRecursively = function(lst) {
+	if (lst.content.length == 0) {
+		return "()";
+	}
 	var result = "(";
 	for (var i = 0; i < lst.content.length - 1; ++i) {
 		if (lst.content[i].type == "list") {

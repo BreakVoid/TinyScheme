@@ -236,3 +236,14 @@
 
 (show (cons
   '(1 2 3 4 5) '(1 2 3 4 6)))
+(show
+  (cons
+    (cons 1 2)
+    (cons 2 3)))
+
+(show
+  (cons 'a '(b c)))
+
+(show
+  (list 'a (+ 3 4) 'c))
+(show (list))

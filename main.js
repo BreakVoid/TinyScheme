@@ -331,14 +331,34 @@ identifiers = {
 			var paras = ProcessParas(raw_paras, curScope);
 			// console.log(paras);
 			// console.log(paras[1].content);
-			var result = {};
-			result.content = [];
-			result.type = "list";
-			result.content.push(paras[0]);
-			for (var i = 0; i < paras[1].content.length; ++i) {
-				result.content.push(paras[1].content[i]);
+			if (paras[1].type == "list") {
+				var result = {};
+				result.content = [];
+				result.type = "list";
+				result.content.push(paras[0]);
+				for (var i = 0; i < paras[1].content.length; ++i) {
+					result.content.push(paras[1].content[i]);
+				}
+				// console.log(result);
+				return result;
+			} else {
+				var result = {};
+				result.content = [];
+				result.type = "pair";
+				result.content.push(paras[0]);
+				result.content.push(paras[1]);
+				return result;
 			}
-			// console.log(result);
+		}
+	},
+	"list" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			var result = {
+				"type" : "list",
+				"content" : paras
+			};
 			return result;
 		}
 	},
@@ -362,6 +382,12 @@ identifiers = {
 			var paras = ProcessParas(raw_paras, curScope);
 			if (paras[0].type == "list") {
 				process.stdout.write(util.DisplayRecursively(paras[0]));
+			} else if (paras[0].type == "pair") {
+				process.stdout.write("(");
+				curScope["display"]["exec"]([paras[0].content[0]], curScope);
+				process.stdout.write(" . ");
+				curScope["display"]["exec"]([paras[0].content[1]], curScope);
+				process.stdout.write(")");
 			} else {
 				process.stdout.write(paras[0].content.toString());
 			}
@@ -370,7 +396,7 @@ identifiers = {
 	"newline" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-			console.log("");
+			process.stdout.write("\n");
 		}
 	},
 	"+" : {
