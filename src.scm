@@ -282,3 +282,14 @@
 (show
   (append '(a b) '(c . d)))
 
+(title "Test Syntax Map")
+
+(define 1to50 (interval 1 51))
+(define ress
+  (map
+    (lambda (x)
+      (if (> x 15)
+        x
+        -1))
+    1to50))
+(show ress)
