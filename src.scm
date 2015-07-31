@@ -14,7 +14,7 @@
           (filter pred? (cdr lst)))))
 
 (define (flatmap func lst)
-  (apply append (map func lst)))
+  (append (map func lst)))
 
 (define (interval start end)
   (if (= start end)
@@ -230,23 +230,6 @@
                 (even? (- n 1))))))
   (even? 88)))
 
-(show
-  ((lambda ()
-      (define even?.1
-        (lambda (n)
-              (if (zero? n)
-                  #t
-                  (odd? (- n 1)))))
-        (define odd?.1
-          (lambda (n)
-              (if (zero? n)
-                  #f
-                  (even? (- n 1)))))
-        (define even? even?.1)
-        (define odd? odd?.1)
-        (even? 88))))
-
-
 (title "fibonacci sequence")
 (define fib
   (lambda (n)
@@ -293,3 +276,27 @@
         -1))
     1to50))
 (show ress)
+
+(title "N-queens")
+(define (NQU size)
+  (define all-cols (interval 1 (+ size 1)))
+  (define (valid? n configuration)
+    (and (none-of? (lambda (col) (= (car configuration) col)) (cdr configuration))
+         (none-of? (lambda (diag) (= (- n (car configuration)) diag))
+                   (map - (interval (+ n 1) (+ size 1)) (cdr configuration)))
+         (none-of? (lambda (cdiag) (= (+ n (car configuration)) cdiag))
+                   (map + (interval (+ n 1) (+ size 1)) (cdr configuration)))))
+
+  (define (choose-col n)
+    (if (= n (+ size 1))
+        (list '())
+        (filter
+         (lambda (configuration) (valid? n configuration))
+         (flatmap
+          (lambda (configuration)
+            (map (lambda (sel) (cons sel configuration))
+                 all-cols))
+          (choose-col (+ n 1))))))
+  (choose-col 1))
+
+(show (length (NQU 8)))

@@ -33,7 +33,11 @@ function ProcExec(str, curScope) {
 			for (var i = 0; i < thisFunction.paraList.length; ++i) {
 				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
 			}
-
+			for (var attr in curScope) {
+				if (typeof scope[attr] == "undefined") {
+					scope[attr] = curScope[attr];
+				}
+			}
 			for (var i = 0; i < thisFunction.body.length - 1; ++i) {
 				ProcExec(thisFunction.body[i].content, scope);
 			}
@@ -60,14 +64,23 @@ function ProcExec(str, curScope) {
 				return curScope[procedureName]["exec"](paras.slice(1, paras.length), curScope);
 			}
 		} else if (curScope[procedureName].type == "function") {
-
+			// ("Named function called");
+			// console.log(procedureName);
 			var thisFunction = curScope[procedureName];
 			var scope = util.clone(thisFunction.scope);
 			var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
+			// console.log(funcParas);
 			for (var i = 0; i < thisFunction.paraList.length; ++i) {
+				// console.log(thisFunction.paraList[i]);
+				// console.log(funcParas[i]);
 				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
+				// console.log(scope[thisFunction.paraList[i].content]);
 			}
-
+			for (var attr in curScope) {
+				if (typeof scope[attr] == "undefined") {
+					scope[attr] = curScope[attr];
+				}
+			}
 			for (var i = 0; i < thisFunction.body.length - 1; ++i) {
 				ProcExec(thisFunction.body[i].content, scope);
 			}
@@ -93,10 +106,17 @@ CallFunction = function(func, paras, curScope) {
 	if (func.type == "syntax") {
 		return func.exec(paras, curScope);
 	} else {
+		var scope;
 		if (typeof func.scope == "undefined") {
-			func.scope = curScope;
+			scope = util.clone(curScope);
+		} else {
+			scope = util.clone(func.scope);
 		}
-		var scope = util.clone(func.scope);
+		for (var attr in curScope) {
+			if (typeof scope[attr] == "undefined") {
+				scope[attr] = curScope[attr];
+			}
+		}
 		var funcParas = ProcessParas(paras, curScope);
 		for (var i = 0; i < func.paraList.length; ++i) {
 			curScope["define"]["exec"]([func.paraList[i], funcParas[i]], curScope, scope);
@@ -126,6 +146,9 @@ ProcessParas = function(raw_paras, curScope) {
 		if (raw_paras[i].type == "procedure") {
 			result.push(ProcExec(raw_paras[i].content, curScope));
 		} else if (raw_paras[i].type == "identifier") {
+			// console.log(raw_paras[i].content);
+			// console.log(curScope);
+			// console.log(curScope[raw_paras[i].content]);
 			if (curScope[raw_paras[i].content].type == "identifier") {
 				result.push(memPool[curScope[raw_paras[i].content]["uuid"]]);
 			} else if (curScope[raw_paras[i].content].type == "function" || curScope[raw_paras[i].content].type == "syntax") {
@@ -160,6 +183,7 @@ identifiers = {
 			var functionForm = util.GetElements(paras[0].content.slice(1, paras[0].content.length - 1));
 			result.paraList = functionForm.slice(0, functionForm.length);
 			result.body = paras.slice(1, paras.length);
+			result.scope = curScope;
 			return result;
 		}
 	},
@@ -178,14 +202,19 @@ identifiers = {
 			} else {
 				var resultName = paras[0].content;
 				if (paras[1].type == "identifier" || paras[1].type == "syntax" || paras[1].type == "function") {
-					result = curScope[paras[1].content];
-					targetScope[resultName] = result;
+					if (paras[1].type == "identifier") {
+						result = curScope[paras[1].content];
+						targetScope[resultName] = result;
+					} else {
+						targetScope[resultName] = paras[1];
+						targetScope[resultName].scope = targetScope;
+					}
 				} else {
 					var realValue = ProcessParas(paras.slice(1, 2), curScope)[0];
 					if (realValue.type == "function" || realValue.type == "syntax") {
 						result = realValue;
 						targetScope[resultName] = result;
-						result.scope = targetScope;
+						targetScope[resultName].scope = targetScope;
 						return ;
 					}
 					var uuid = util.genUUID();
@@ -687,6 +716,9 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
+			console.log(paras);
+			console.log(paras[0]);
+			console.log(paras[1]);
 			var isFloat = false;
 			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
 				isFloat = true;
