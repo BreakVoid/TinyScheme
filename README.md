@@ -3,6 +3,12 @@ PPCA2015 Scheme Interpreter Powered By BreakVoid(Song-Yu Ke)
 
 A tiny Scheme interpreter written by javascript
 
+#Environment:
+Node.Js v0.12
+Run "node ./main.js" and put your source in "./src.scm".
+
+The interpreter will read the code from "./src.scm" and execute them.
+
 -Use a package to support big integers
 
 -Tail call optimization is not supported.
