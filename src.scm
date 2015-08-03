@@ -49,8 +49,8 @@
 (define fz (+ fx fx fy fy))
 (show fz)
 (show (+ (+ (+ 1 1)
-	  (+ 1 2)
-	  (+ 1 3))
+    (+ 1 2)
+    (+ 1 3))
    (+ 4 5)))
 
 (show (* 2.5 2.5))
@@ -62,8 +62,8 @@
 (show (- 0.4 0.5))
 
 (show (+ (* (- 4 5)
-	        -3
-	        6)
+          -3
+          6)
          (- 287 187)))
 
 (show (if #f 2 3))
@@ -85,7 +85,7 @@
 (show (square (square 512)))
 
 (define (compare opt a b)
-	(opt a b))
+  (opt a b))
 
 (show (if (compare > 3 2) (- 3 2) (- 2 3)))
 (show (if (compare < 3 2) (- 3 2) (- 2 3)))
@@ -154,9 +154,9 @@
 (show (computeE 0 1 1.0 1000))
 
 (define (factional n)
-	(if (< n 2)
-		1
-		(* n (factional (- n 1)))))
+  (if (< n 2)
+    1
+    (* n (factional (- n 1)))))
 (show (factional 10))
 
 (show (fast-exp 2 0))
@@ -320,11 +320,25 @@
        (eqv? 'lowercase 'LOwERcaSE)
        (eqv? '() '())
        (eqv? 10000000000000 10000000000000)
-       (not (eqv? (cons 1 2) (cons 1 2))))
+       (not (eqv? (cons 1 2) (cons 1 2)))
  (let ((lst (cons 1 2)))
          (eqv? lst lst))
   (let ((p (lambda (x) x)))
-        (eqv? p p)))
+        (eqv? p p))
 (not (eqv? #f 'nil))
-(not (eqv? (lambda () 1) (lambda () 2)))
-)
+(not (eqv? (lambda () 1) (lambda () 2)))))
+
+(title "let-bindins")
+(define var1 1)
+(show (let ((var1 2)
+               (y (lambda () var1)))
+           (y)))
+(show (let* ((var1 2)
+                (y (lambda () var1)))
+           (y)))
+(show (letrec ((var1 2)
+                  (y (lambda () var1)))
+           (y)))
+(show (let* ((var1 2)
+             (y var1))
+           y))

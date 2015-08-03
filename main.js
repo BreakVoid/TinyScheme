@@ -19,26 +19,15 @@ function ProcExec(str, curScope) {
 		var firstProcessResult = ProcExec(paras[0].content, curScope);
 		if (firstProcessResult.type = "function") {
 			var thisFunction = firstProcessResult;
-			var scope;
-			if (typeof thisFunction.scope == "undefined") {
-				scope = util.clone(curScope);
-			} else {
-				scope = util.clone(thisFunction.scope);
-			}
+			var scope = util.clone(thisFunction.scope);
 			var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
 			for (var i = 0; i < thisFunction.paraList.length; ++i) {
 				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
-			}
-			for (var attr in curScope) {
-				if (typeof scope[attr] === "undefined") {
-					scope[attr] = curScope[attr];
-				}
 			}
 			for (var i = 0; i < thisFunction.body.length - 1; ++i) {
 				ProcExec(thisFunction.body[i].content, scope);
 			}
 			if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
-				// console.log(thisFunction.body[thisFunction.body.length - 1].content);
 				return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
 			} else {
 				if (thisFunction.body[thisFunction.body.length - 1].type == "identifier") {
@@ -204,26 +193,29 @@ identifiers = {
 				var resultName = functionForm[0].content;
 				result.paraList = functionForm.slice(1, functionForm.length);
 				targetScope[resultName] = result;
-				targetScope[resultName].scope = targetScope;
+				if (typeof targetScope[resultName].scope == "undefined") {
+					targetScope[resultName].scope = targetScope;
+				}
 			} else {
 				var resultName = paras[0].content;
-				if (typeof paras[1] === "undefined") {
-					console.log(paras[1]);
-				}
 				if (paras[1].type == "identifier" || paras[1].type == "syntax" || paras[1].type == "function") {
 					if (paras[1].type == "identifier") {
 						result = curScope[paras[1].content];
 						targetScope[resultName] = result;
 					} else {
 						targetScope[resultName] = paras[1];
-						targetScope[resultName].scope = targetScope;
+						if (typeof targetScope[resultName].scope == "undefined") {
+							targetScope[resultName].scope = targetScope;
+						}
 					}
 				} else {
 					var realValue = ProcessParas(paras.slice(1, 2), curScope)[0];
 					if (realValue.type == "function" || realValue.type == "syntax") {
 						result = realValue;
 						targetScope[resultName] = result;
-						targetScope[resultName].scope = targetScope;
+						if (typeof targetScope[resultName].scope == "undefined") {
+							targetScope[resultName].scope = targetScope;
+						}
 						return ;
 					}
 					var uuid = util.genUUID();
