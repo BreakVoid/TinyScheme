@@ -34,7 +34,7 @@ function ProcExec(str, curScope) {
 				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
 			}
 			for (var attr in curScope) {
-				if (typeof scope[attr] == "undefined") {
+				if (typeof scope[attr] === "undefined") {
 					scope[attr] = curScope[attr];
 				}
 			}
@@ -42,6 +42,7 @@ function ProcExec(str, curScope) {
 				ProcExec(thisFunction.body[i].content, scope);
 			}
 			if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
+				// console.log(thisFunction.body[thisFunction.body.length - 1].content);
 				return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
 			} else {
 				if (thisFunction.body[thisFunction.body.length - 1].type == "identifier") {
@@ -77,7 +78,7 @@ function ProcExec(str, curScope) {
 				// console.log(scope[thisFunction.paraList[i].content]);
 			}
 			for (var attr in curScope) {
-				if (typeof scope[attr] == "undefined") {
+				if (typeof scope[attr] === "undefined") {
 					scope[attr] = curScope[attr];
 				}
 			}
@@ -85,6 +86,11 @@ function ProcExec(str, curScope) {
 				ProcExec(thisFunction.body[i].content, scope);
 			}
 			if (thisFunction.body[thisFunction.body.length - 1].type == "procedure") {
+				// console.log(thisFunction.body[thisFunction.body.length - 1].content);
+				// if (thisFunction.body[thisFunction.body.length - 1].content == "(= (car configuration) col)") {
+				// 	console.log(memPool[scope["configuration"].uuid].content);
+				// 	console.log(memPool[scope["col"].uuid].content);
+				// }
 				return ProcExec(thisFunction.body[thisFunction.body.length - 1].content, scope);
 			} else {
 				if (thisFunction.body[thisFunction.body.length - 1].type == "identifier") {
@@ -113,7 +119,7 @@ CallFunction = function(func, paras, curScope) {
 			scope = util.clone(func.scope);
 		}
 		for (var attr in curScope) {
-			if (typeof scope[attr] == "undefined") {
+			if (typeof scope[attr] === "undefined") {
 				scope[attr] = curScope[attr];
 			}
 		}
@@ -122,9 +128,13 @@ CallFunction = function(func, paras, curScope) {
 			curScope["define"]["exec"]([func.paraList[i], funcParas[i]], curScope, scope);
 		}
 		for (var i = 0; i < func.body.length - 1; ++i) {
+			// console.log(func.body[i].content);
 			ProcExec(func.body[i].content, scope);
 		}
 		if (func.body[func.body.length - 1].type == "procedure") {
+			// console.log(func.body[func.body.length - 1].content);
+			// var tmp = ProcExec(func.body[func.body.length - 1].content, scope);
+			// console.log(tmp);
 			return ProcExec(func.body[func.body.length - 1].content, scope);
 		} else {
 			if (func.body[func.body.length - 1].type == "identifier") {
@@ -231,13 +241,39 @@ identifiers = {
 	"map" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-			//TO DO
+			var paras = ProcessParas(raw_paras, curScope);
+			var func;
+			if (paras[0].type == "identifier") {
+				func = curScope[paras[0].content];
+			} else {
+				func = paras[0];
+			}
+			// console.log(func);
+			var result = {
+				"type" : "list",
+				"content" : []
+			}
+			for (var i = 0; i < paras[1].content.length; ++i) {
+				var tmpParas = [];
+				for (var j = 1; j < paras.length; ++j) {
+					tmpParas.push(paras[j].content[i]);
+				}
+				result.content.push(CallFunction(func, tmpParas, curScope));
+			}
+			return result;
 		}
 	},
 	"apply" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-
+			// console.log("syntax apply called");
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].type == "identifier") {
+				func = curScope[paras[0].content];
+			} else {
+				func = paras[0];
+			}
+			return CallFunction(func,  paras[1].content, curScope);
 		}
 	},
 	"let" : {
@@ -472,7 +508,11 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
-			return { "type" : "list", "content" : paras[0].content.slice(1, paras[0].content.length)};
+			if (paras[0].type == "list") {
+				return { "type" : "list", "content" : paras[0].content.slice(1, paras[0].content.length)};
+			} else {
+				return paras[0].content[1];
+			}
 		}
 	},
 	"display" : {
@@ -702,9 +742,6 @@ identifiers = {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
-			console.log(paras);
-			console.log(paras[0]);
-			console.log(paras[1]);
 			var isFloat = false;
 			if (paras[0].type == "number-float" || paras[1].type == "number-float") {
 				isFloat = true;

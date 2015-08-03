@@ -39,6 +39,7 @@ exports.GetSentences = function(str) {
 
 exports.GetType = function(str) {
 	var isNumber = true;
+	var digitExisted = false;
 	var offset = 0;
 	var floatPoint = false;
 	if (str[0] == '-') {
@@ -56,10 +57,12 @@ exports.GetType = function(str) {
 			if (str[i] < '0' || str[i] > '9') {
 				isNumber = false;
 				break;
+			} else {
+				digitExisted = true;
 			}
 		}
 	}
-	if (isNumber) {
+	if (isNumber && digitExisted) {
 		if (floatPoint) {
 			return "number-float";
 		} else {

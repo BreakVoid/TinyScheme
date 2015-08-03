@@ -14,7 +14,7 @@
           (filter pred? (cdr lst)))))
 
 (define (flatmap func lst)
-  (append (map func lst)))
+  (apply append (map func lst)))
 
 (define (interval start end)
   (if (= start end)
@@ -277,6 +277,10 @@
     1to50))
 (show ress)
 
+(show
+  (apply append
+    (list '(1) '(2))))
+
 (title "N-queens")
 (define (NQU size)
   (define all-cols (interval 1 (+ size 1)))
@@ -299,4 +303,4 @@
           (choose-col (+ n 1))))))
   (choose-col 1))
 
-(show (length (NQU 8)))
+(show (length (NQU 5)))
