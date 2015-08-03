@@ -93,6 +93,20 @@ exports.GetElements = function(str) {
 			if (str[i] == "\"") {
 				quoteCnt = 0;
 			}
+			if (quoteCnt == 0) {
+				var trimed_content = content.trim();
+				while (needAppend > 0) {
+					--needAppend;
+					trimed_content += ")";
+				}
+				var item = {content : trimed_content};
+				item["type"] = exports.GetType(item.content);
+				if (item["type"] == "string") {
+					item["content"] = item["content"].slice(1, item["content"].length - 1);
+				}
+				result.push(item);
+				content = "";
+			}
 			continue;
 		}
 		if (str[i] == '\"') {
@@ -119,7 +133,7 @@ exports.GetElements = function(str) {
 					var item = {content : trimed_content};
 					item["type"] = exports.GetType(item.content);
 					if (item["type"] == "string") {
-						item["content"] = item["content"].slicc(1, item["content"].length - 1);
+						item["content"] = item["content"].slice(1, item["content"].length - 1);
 					}
 					result.push(item);
 					content = "";
@@ -145,6 +159,9 @@ exports.GetElements = function(str) {
 					}
 					var item = {content : trimed_content};
 					item["type"] = exports.GetType(item.content);
+					if (item["type"] == "string") {
+						item["content"] = item["content"].slice(1, item["content"].length - 1);
+					}
 					result.push(item);
 					content = "";
 				}
@@ -168,7 +185,11 @@ exports.GetElements = function(str) {
 		}
 		var item = {content : trimed_content};
 		item["type"] = exports.GetType(item.content);
+		if (item["type"] == "string") {
+			item["content"] = item["content"].slice(1, item["content"].length - 1);
+		}
 		result.push(item);
+		content = "";
 	}
 	return result;
 }
