@@ -231,21 +231,7 @@ identifiers = {
 	"map" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-			var paras = ProcessParas(raw_paras, curScope);
-			var func;
-			if (paras[0].type == "identifier") {
-				func = curScope[paras[0].content];
-			} else {
-				func = paras[0];
-			}
-			var result = {
-				"type" : "list",
-				"content" : []
-			}
-			for (var i = 0; i < paras[1].content.length; ++i) {
-				result.content.push(CallFunction(func, [paras[1].content[i]], curScope));
-			}
-			return result;
+			//TO DO
 		}
 	},
 	"apply" : {
