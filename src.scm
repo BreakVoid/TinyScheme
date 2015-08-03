@@ -309,3 +309,22 @@
   (eqv? 'a 'a))
 (show
   (not (eqv? 'a 'b)))
+
+(show
+  (let ((lst (cons 1 2)))
+         (eqv? lst lst)))
+
+(show (and
+       (eqv? 'a 'a)
+       (not (eqv? 'a 'b))
+       (eqv? 'lowercase 'LOwERcaSE)
+       (eqv? '() '())
+       (eqv? 10000000000000 10000000000000)
+       (not (eqv? (cons 1 2) (cons 1 2))))
+ (let ((lst (cons 1 2)))
+         (eqv? lst lst))
+  (let ((p (lambda (x) x)))
+        (eqv? p p)))
+(not (eqv? #f 'nil))
+(not (eqv? (lambda () 1) (lambda () 2)))
+)

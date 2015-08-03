@@ -207,6 +207,9 @@ identifiers = {
 				targetScope[resultName].scope = targetScope;
 			} else {
 				var resultName = paras[0].content;
+				if (typeof paras[1] === "undefined") {
+					console.log(paras[1]);
+				}
 				if (paras[1].type == "identifier" || paras[1].type == "syntax" || paras[1].type == "function") {
 					if (paras[1].type == "identifier") {
 						result = curScope[paras[1].content];
@@ -822,15 +825,21 @@ identifiers = {
 			} else if (paras[0].type == "number-float") {
 				return curScope["="]["exec"](paras, curScope);
 			} else if (paras[0].type == "text-value") {
-				return curScope["string=?"]["exec"](paras, curScope);
+				var str1 = curScope["symbol->string"]["exec"]([paras[0]], curScope);
+				var str2 = curScope["symbol->string"]["exec"]([paras[1]], curScope);
+				return curScope["string=?"]["exec"]([str1, str2], curScope);
 			} else if (paras[0].type == "list") {
 				if (paras[0].content.length == 0 && paras[1].content.length == 0) {
 					return BOOL_TRUE;
 				} else {
 					return BOOL_FALSE;
 				}
-			}else {
-				return paras[0] === paras[1];
+			} else {
+				if (paras[0] == paras[1]) {
+					return BOOL_TRUE;
+				} else {
+					return BOOL_FALSE;
+				}
 			}
 		}
 	},
@@ -857,7 +866,28 @@ identifiers = {
 	"string=?" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
-
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].content.length != paras[1].content.length) {
+				return BOOL_FALSE;
+			} else {
+				for (var i = 0; i < paras[0].content.length; ++i) {
+					if (paras[0].content[i] !=paras[1].content[i]) {
+						return BOOL_FALSE;
+					}
+				}
+				return BOOL_TRUE;
+			}
+		}
+	},
+	"symbol->string" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			var result = {
+				"type" : "string",
+				"content" : paras[0].content.toLowerCase()
+			};
+			return result;
 		}
 	}
 };

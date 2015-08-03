@@ -118,6 +118,9 @@ exports.GetElements = function(str) {
 					}
 					var item = {content : trimed_content};
 					item["type"] = exports.GetType(item.content);
+					if (item["type"] == "string") {
+						item["content"] = item["content"].slicc(1, item["content"].length - 1);
+					}
 					result.push(item);
 					content = "";
 				}
