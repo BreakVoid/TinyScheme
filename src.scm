@@ -303,4 +303,9 @@
           (choose-col (+ n 1))))))
   (choose-col 1))
 
-(show (length (NQU 7)))
+(show (length (NQU 5)))
+
+(show
+  (eqv? 'a 'a))
+(show
+  (not (eqv? 'a 'b)))

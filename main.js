@@ -6,14 +6,10 @@ var identifier = {};
 var TRUE_ID = util.genUUID();
 var FALSE_ID = util.genUUID();
 
-memPool[TRUE_ID] = {
-	"type" : "boolean",
-	"content" : true
-};
-memPool[FALSE_ID] = {
-	"type" : "boolean",
-	"content" : false
-};
+BOOL_TRUE = { "type" : "boolean", "content" : true };
+BOOL_FALSE = { "type" : "boolean", "content" : false };
+memPool[TRUE_ID] = BOOL_TRUE;
+memPool[FALSE_ID] = BOOL_FALSE;
 
 ProcessParas = function(raw_paras, curScope) {}
 
@@ -809,7 +805,33 @@ identifiers = {
 	},
 	"eqv?" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].type != paras[1].type) {
+				return BOOL_FALSE;
+			}
+			if (paras[0].type == "boolean" && paras[1].type == "boolean") {
+				if (paras[0].content == paras[1].content) {
+					return BOOL_TRUE;
+				} else {
+					return BOOL_FALSE;
+				}
+			}
+			if (paras[0].type == "number-integer") {
+				return curScope["="]["exec"](paras, curScope);
+			} else if (paras[0].type == "number-float") {
+				return curScope["="]["exec"](paras, curScope);
+			} else if (paras[0].type == "text-value") {
+				return curScope["string=?"]["exec"](paras, curScope);
+			} else if (paras[0].type == "list") {
+				if (paras[0].content.length == 0 && paras[1].content.length == 0) {
+					return BOOL_TRUE;
+				} else {
+					return BOOL_FALSE;
+				}
+			}else {
+				return paras[0] === paras[1];
+			}
 		}
 	},
 	"equal?" : {
@@ -830,6 +852,12 @@ identifiers = {
 			} else {
 				return { type : "boolean", content : false };
 			}
+		}
+	},
+	"string=?" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+
 		}
 	}
 };
