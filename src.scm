@@ -303,4 +303,4 @@
           (choose-col (+ n 1))))))
   (choose-col 1))
 
-(show (length (NQU 5)))
+(show (length (NQU 7)))
