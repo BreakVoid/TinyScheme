@@ -342,3 +342,19 @@
 (show (let* ((var1 2)
              (y var1))
            y))
+
+(title "infinite stream")
+(define (make-stream start step)
+  (cons start (lambda () (make-stream (+ start step) step))))
+(define (head stream) (car stream))
+(define (tail stream) ((cdr stream)))
+(define (nth-from stream n)
+  (if (= n 0)
+      stream
+      (nth-from (tail stream) (- n 1))))
+
+(define stream (make-stream 0 1))
+(show (head stream))
+(show (head (nth-from stream 4)))
+(define stream (nth-from stream 100))
+(show (head stream))
