@@ -336,6 +336,8 @@
               (list (list src dest))
               (hanoi mid dest src (- n 1)))))
 
+
+(title "hanoi")
 (show (hanoi 'a 'b 'c 3))
 
 (title "let-bindins")
