@@ -314,6 +314,7 @@
   (let ((lst (cons 1 2)))
          (eqv? lst lst)))
 
+(title "predicate eqv?")
 (show (and
        (eqv? 'a 'a)
        (not (eqv? 'a 'b))
@@ -321,12 +322,21 @@
        (eqv? '() '())
        (eqv? 10000000000000 10000000000000)
        (not (eqv? (cons 1 2) (cons 1 2)))
- (let ((lst (cons 1 2)))
+       (let ((lst (cons 1 2)))
          (eqv? lst lst))
-  (let ((p (lambda (x) x)))
-        (eqv? p p))
-(not (eqv? #f 'nil))
-(not (eqv? (lambda () 1) (lambda () 2)))))
+       (not (eqv? (lambda () 1) (lambda () 2)))
+       (not (eqv? #f 'nil))
+       (let ((p (lambda (x) x)))
+        (eqv? p p))))
+
+(define (hanoi src dest mid n)
+  (if (= n 0)
+      '()
+      (append (hanoi src mid dest (- n 1))
+              (list (list src dest))
+              (hanoi mid dest src (- n 1)))))
+
+(show (hanoi 'a 'b 'c 3))
 
 (title "let-bindins")
 (define var1 1)
@@ -358,3 +368,12 @@
 (show (head (nth-from stream 4)))
 (define stream (nth-from stream 100))
 (show (head stream))
+
+(define (stream-map func . streams)
+  (cons (apply func (map head streams))
+        (lambda ()
+          (apply stream-map (append (list func) (map tail streams))))))
+(define sqrn-minus-n
+  (stream-map - (stream-map sqr (make-stream 0 1)) (make-stream 0 1)))
+(show (head (nth-from sqrn-minus-n 5)))
+(show (head (nth-from sqrn-minus-n 100)))

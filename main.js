@@ -22,7 +22,22 @@ function ProcExec(str, curScope) {
 			var scope = util.clone(thisFunction.scope);
 			var funcParas = ProcessParas(paras.slice(1, paras.length), curScope);
 			for (var i = 0; i < thisFunction.paraList.length; ++i) {
-				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
+				// console.log(thisFunction.paraList[i]);
+				// console.log(funcParas[i]);
+				if (thisFunction.paraList[i].content != ".") {
+					curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
+				} else {
+					var plist = {
+						"type" : "list",
+						"content" : []
+					};
+					for (var j = i; j < funcParas.length; ++j) {
+						plist.content.push(funcParas[j]);
+					}
+					curScope["define"]["exec"]([thisFunction.paraList[i + 1], plist], curScope, scope);
+					break;
+				}
+				// console.log(scope[thisFunction.paraList[i].content]);
 			}
 			for (var i = 0; i < thisFunction.body.length - 1; ++i) {
 				ProcExec(thisFunction.body[i].content, scope);
@@ -59,7 +74,19 @@ function ProcExec(str, curScope) {
 			for (var i = 0; i < thisFunction.paraList.length; ++i) {
 				// console.log(thisFunction.paraList[i]);
 				// console.log(funcParas[i]);
-				curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
+				if (thisFunction.paraList[i].content != ".") {
+					curScope["define"]["exec"]([thisFunction.paraList[i], funcParas[i]], curScope, scope);
+				} else {
+					var plist = {
+						"type" : "list",
+						"content" : []
+					};
+					for (var j = i; j < funcParas.length; ++j) {
+						plist.content.push(funcParas[j]);
+					}
+					curScope["define"]["exec"]([thisFunction.paraList[i + 1], plist], curScope, scope);
+					break;
+				}
 				// console.log(scope[thisFunction.paraList[i].content]);
 			}
 			for (var attr in curScope) {
@@ -110,7 +137,22 @@ CallFunction = function(func, paras, curScope) {
 		}
 		var funcParas = ProcessParas(paras, curScope);
 		for (var i = 0; i < func.paraList.length; ++i) {
-			curScope["define"]["exec"]([func.paraList[i], funcParas[i]], curScope, scope);
+			// console.log(func.paraList[i]);
+			// console.log(funcParas[i]);
+			if (func.paraList[i].content != ".") {
+				curScope["define"]["exec"]([func.paraList[i], funcParas[i]], curScope, scope);
+			} else {
+				var plist = {
+					"type" : "list",
+					"content" : []
+				};
+				for (var j = i; j < funcParas.length; ++j) {
+					plist.content.push(funcParas[j]);
+				}
+				curScope["define"]["exec"]([func.paraList[i + 1], plist], curScope, scope);
+				break;
+			}
+			// console.log(scope[thisFunction.paraList[i].content]);
 		}
 		for (var i = 0; i < func.body.length - 1; ++i) {
 			// console.log(func.body[i].content);
@@ -506,6 +548,13 @@ identifiers = {
 			}
 		}
 	},
+	"cadr" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			return paras[0].content[1];
+		}
+	},
 	"display" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
@@ -677,6 +726,13 @@ identifiers = {
 				content : crunch.stringify(crunch.mod(crunch.parse(paras[0].content), crunch.parse(paras[1].content))),
 				type : "number-integer"
 			};
+		}
+	},
+	"sqr" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			return curScope["*"]["exec"]([paras[0], paras[0]], curScope);
 		}
 	},
 	">" : {
