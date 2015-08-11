@@ -11,7 +11,18 @@ exports.GetSentences = function(str) {
 	var result = [];
 	var content = "";
 	var roundBracketCnt = 0;
+	var inComment = false;
 	for (var i = 0; i < str.length; ++i) {
+		if (inComment) {
+			if (str[i] == '\n') {
+				inComment = false;
+				continue;
+			}
+		}
+		if (str[i] == ';') {
+			inComment = true;
+			continue;
+		}
 		if (roundBracketCnt == 0 && str[i] == '(') {
 			roundBracketCnt = 1;
 			content = "(";
@@ -81,115 +92,139 @@ exports.GetType = function(str) {
 	return "identifier";
 }
 
-exports.GetElements = function(str) {
-	var result = [];
-	var content = "";
-	var roundBracketCnt = 0;
-	var needAppend = 0;
-	var quoteCnt = 0;
-	for (var i = 0; i < str.length; ++i) {
-		if (quoteCnt) {
-			content += str[i];
-			if (str[i] == "\"") {
-				quoteCnt = 0;
-			}
-			if (quoteCnt == 0) {
-				var trimed_content = content.trim();
-				while (needAppend > 0) {
-					--needAppend;
-					trimed_content += ")";
-				}
-				var item = {content : trimed_content};
-				item["type"] = exports.GetType(item.content);
-				if (item["type"] == "string") {
-					item["content"] = item["content"].slice(1, item["content"].length - 1);
-				}
-				result.push(item);
-				content = "";
-			}
-			continue;
+function isEmptyChar(ch) {
+	if (ch == " " || ch == '\n' || ch == '\t' || ch == '\r') {
+		return true;
+	} else {
+		return false;
+	}
+}
+
+function isInteger(str) {
+	var offset = 0;
+	if (str[0] == '-') {
+		offset = 1;
+	}
+	for (var i = offset; i < str.length; ++i) {
+		if (str[i] > '9' || str[i] < '0') {
+			return false;
 		}
-		if (str[i] == '\"') {
-			content += str[i];
-			quoteCnt = 1;
-			continue;
-		}
-		if (roundBracketCnt == 0) {
-			if (str[i] == '\'') {
-				content += "(quote ";
-				++needAppend;
-				continue;
-			}
-			if (str[i] == ' ' || str[i] == '\n' || str[i] == '\r' || str[i] == '\t') {
-				if (i == 0 || str[i - 1] == ' ' || str[i - 1] == '\n' || str[i - 1] == '\r' || str[i - 1] == '\t' ) {
-					continue;
-				}
-				if (content != "") {
-					var trimed_content = content.trim();
-					while (needAppend > 0) {
-						--needAppend;
-						trimed_content += ")";
-					}
-					var item = {content : trimed_content};
-					item["type"] = exports.GetType(item.content);
-					if (item["type"] == "string") {
-						item["content"] = item["content"].slice(1, item["content"].length - 1);
-					}
-					result.push(item);
-					content = "";
-				}
+	}
+	return str.length > offset;
+}
+
+function isFloatNumber(str) {
+	var offset = 0;
+	var floatPoint = false;
+	if (str[0] == '-') {
+		offset = 1;
+	}
+	for (var i = offset; i < str.length; ++i) {
+		if (str[i] == '.') {
+			if (floatPoint) {
+				return false;
 			} else {
-				content += str[i];
-				if (str[i] == '(') {
-					++roundBracketCnt;
-				}
+				floatPoint = true;
 			}
 		} else {
-			if (str[i] == '(') {
-				content += str[i];
-				++roundBracketCnt;
-			} else if (str[i] == ')') {
-				content += str[i];
-				--roundBracketCnt;
-				if (roundBracketCnt == 0) {
-					var trimed_content = content.trim();
-					while (needAppend > 0) {
-						--needAppend;
-						trimed_content += ")";
-					}
-					var item = {content : trimed_content};
-					item["type"] = exports.GetType(item.content);
-					if (item["type"] == "string") {
-						item["content"] = item["content"].slice(1, item["content"].length - 1);
-					}
-					result.push(item);
-					content = "";
-				}
-				continue;
-			} else if (str[i] == '\n') {
-				content += ' ';
-			} else if (str[i] == '\r') {
-				continue;
-			} else if (str[i] == '\t') {
-				content += ' ';
-			} else {
-				content += str[i];
+			if (str[i] > '9' || str[i] < '0') {
+				return false;
 			}
 		}
 	}
-	if (content != "") {
-		var trimed_content = content.trim();
-		while (needAppend > 0) {
-			--needAppend;
-			trimed_content += ")";
+	return str.length > offset;
+}
+
+function GetElement(str) {
+	var trimed_str = str.trim();
+	var content;
+	if (trimed_str[0] == '\"' && trimed_str[trimed_str.length - 1] == '\"') {
+		content = trimed_str.slice(1, trimed_str.length - 1);
+		return {
+			"type" : "string",
+			"content" : content
+		};
+	} else if (trimed_str[0] == '(' && trimed_str[trimed_str.length - 1] == ')') {
+		return {
+			"type" : "procedure",
+			"content" : trimed_str
+		};
+	} else if (trimed_str[0] == '\'') {
+		return {
+			"type" : "procedure",
+			"content" : "(quote " + trimed_str.slice(1, trimed_str.length) + ')'
+		};
+	} else if (isInteger(trimed_str)) {
+		return {
+			"type" : "number-integer",
+			"content" : trimed_str
+		};
+	} else if (isFloatNumber(trimed_str)) {
+		return {
+			"type" : "number-float",
+			"content" : trimed_str
+		};
+	} else {
+		return {
+			"type" : "identifier",
+			"content" : trimed_str
+		};
+	}
+}
+
+exports.GetElements = function(str) {
+	var result = [];
+	var content = "";
+	var inquote = false;
+	var roundBracketCnt = 0;
+	for (var i = 0; i < str.length; ++i) {
+		if (inquote) {
+			content += str[i];
+			if (str[i] == '\"') {
+				inquote = false;
+			}
+		} else {
+			if (roundBracketCnt > 0) {
+				if ((i == 0 && isEmptyChar(str[i])) || (i > 0 && isEmptyChar(str[i]) && isEmptyChar(str[i - 1]))) {
+					continue;
+				}
+				if (isEmptyChar(str[i])) {
+					content += " ";
+				} else {
+					content += str[i];
+					if (str[i] == '(') {
+						++roundBracketCnt;
+					} else if (str[i] == ')') {
+						--roundBracketCnt;
+						if (roundBracketCnt == 0) {
+							result.push(GetElement(content));
+							content = "";
+						}
+					}
+				}
+			} else {
+				if (isEmptyChar(str[i])) {
+					if ((i == 0 && isEmptyChar(str[i])) || (i > 0 && isEmptyChar(str[i]) && isEmptyChar(str[i - 1]))) {
+						continue;
+					}
+					if (content == "") {
+						continue;
+					}
+					result.push(GetElement(content));
+					content = "";
+				} else {
+					content += str[i];
+					if (str[i] == '\"') {
+						inquote = true;
+					} else if (str[i] == '(') {
+						++roundBracketCnt;
+					}
+				}
+			}
 		}
-		var item = {content : trimed_content};
-		item["type"] = exports.GetType(item.content);
-		if (item["type"] == "string") {
-			item["content"] = item["content"].slice(1, item["content"].length - 1);
-		}
-		result.push(item);
-		content = "";
+	}
+	if (content.trim() != "") {
+		result.push(GetElement(content));
 	}
 	return result;
 }

@@ -183,7 +183,6 @@ ProcessParas = function(raw_paras, curScope) {
 		if (raw_paras[i].type == "procedure") {
 			result.push(ProcExec(raw_paras[i].content, curScope));
 		} else if (raw_paras[i].type == "identifier") {
-			// console.log(raw_paras[i].content);
 			// console.log(curScope);
 			// console.log(curScope[raw_paras[i].content]);
 			if (curScope[raw_paras[i].content].type == "identifier") {
@@ -436,7 +435,10 @@ identifiers = {
 				var pp = util.GetElements(paras[i].content.slice(1, paras[i].content.length - 1));
 				var condition = ProcessParas(pp.slice(0, 1), curScope)[0].content;
 				if (condition) {
-					return ProcessParas(pp.slice(1, 2), curScope)[0];
+					for (var i = 1; i < pp.length - 1; ++i) {
+						ProcessParas(pp.slice(i, i + 1), curScope);
+					}
+					return ProcessParas(pp.slice(pp.length - 1, pp.length), curScope)[0];
 				}
 			}
 		}
@@ -448,8 +450,15 @@ identifiers = {
 			if (raw_paras[0].type == "procedure") {
 				result.type = "list";
 				result.content = util.GetElements(raw_paras[0].content.slice(1, raw_paras[0].content.length - 1));
+				for (var i = 0; i < result.content.length; ++i) {
+					if (result.content[i].type == "procedure") {
+						result.content[i] = curScope["quote"]["exec"]([result.content[i]], curScope);
+					} else {
+						result.content[i].type = "symbol";
+					}
+				}
 			} else {
-				result.type = "text-value";
+				result.type = "symbol";
 				result.content = raw_paras[0].content;
 			}
 			return result;
@@ -537,6 +546,13 @@ identifiers = {
 			return paras[0].content[0];
 		}
 	},
+	"caar" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras,curScope);
+			return paras[0].content[0].content[0];
+		}
+	},
 	"cdr" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
@@ -553,6 +569,34 @@ identifiers = {
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
 			return paras[0].content[1];
+		}
+	},
+	"cadar" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			return paras[0].content[0].content[1];
+		}
+	},
+	"reverse" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var para = ProcessParas(raw_paras, curScope)[0];
+			if (para.type == "list") {
+				var result = {
+					"type" : "list",
+					"content" : []
+				};
+				for (var i = para.content.length - 1; i >= 0; --i) {
+					result.content.push(para.content[i]);
+				}
+				return result;
+			} else if (para.type == "pair") {
+				return {
+					"type" : "pair",
+					"content" : [para.content[1], para.content[0]]
+				};
+			}
 		}
 	},
 	"display" : {
@@ -810,6 +854,19 @@ identifiers = {
 			}
 		}
 	},
+	"<=" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (curScope["<"]["exec"](paras, curScope).content) {
+				return BOOL_TRUE;
+			} else if (curScope["="]["exec"](paras, curScope).content) {
+				return BOOL_TRUE;
+			} else {
+				return BOOL_FALSE;
+			}
+		}
+	},
 	"and" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
@@ -851,7 +908,9 @@ identifiers = {
 	},
 	"eq?" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			// var paras = ProcessParas(raw_paras, curScope);
+			return curScope["eqv?"]["exec"](raw_paras, curScope);
 		}
 	},
 	"eqv?" : {
@@ -872,7 +931,7 @@ identifiers = {
 				return curScope["="]["exec"](paras, curScope);
 			} else if (paras[0].type == "number-float") {
 				return curScope["="]["exec"](paras, curScope);
-			} else if (paras[0].type == "text-value") {
+			} else if (paras[0].type == "symbol") {
 				var str1 = curScope["symbol->string"]["exec"]([paras[0]], curScope);
 				var str2 = curScope["symbol->string"]["exec"]([paras[1]], curScope);
 				return curScope["string=?"]["exec"]([str1, str2], curScope);
@@ -893,7 +952,61 @@ identifiers = {
 	},
 	"equal?" : {
 		"type" : "syntax",
-		"exec" : function(paras, curScope) {
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].type != paras[1].type) {
+				return BOOL_FALSE;
+			} else {
+				if (paras[0].type == "list" || paras[0] == "pair") {
+					if (paras[0].content.length != paras[1].content.length) {
+						return BOOL_FALSE;
+					}
+					for (var i = 0; i < paras[0].content.length; ++i) {
+						if (!curScope["equal?"]["exec"]([paras[0].content[i], paras[1].content[i]], curScope)) {
+							return BOOL_FALSE;
+						}
+					}
+					return BOOL_TRUE;
+				} else {
+					if (paras[0].type != paras[1].type) {
+						return BOOL_FALSE;
+					}
+					if (paras[0].type == "boolean" && paras[1].type == "boolean") {
+						if (paras[0].content == paras[1].content) {
+							return BOOL_TRUE;
+						} else {
+							return BOOL_FALSE;
+						}
+					}
+					if (paras[0].type == "number-integer") {
+						return curScope["="]["exec"](paras, curScope);
+					} else if (paras[0].type == "number-float") {
+						return curScope["="]["exec"](paras, curScope);
+					} else if (paras[0].type == "symbol") {
+						var str1 = curScope["symbol->string"]["exec"]([paras[0]], curScope);
+						var str2 = curScope["symbol->string"]["exec"]([paras[1]], curScope);
+						return curScope["string=?"]["exec"]([str1, str2], curScope);
+					} else if (paras[0].type == "list") {
+						if (paras[0].content.length == 0 && paras[1].content.length == 0) {
+							return BOOL_TRUE;
+						} else {
+							return BOOL_FALSE;
+						}
+					} else if (paras[0].type == "string") {
+						if (paras[0].content == paras[1].content) {
+							return BOOL_TRUE;
+						} else {
+							return BOOL_FALSE;
+						}
+					} else {
+						if (paras[0] == paras[1]) {
+							return BOOL_TRUE;
+						} else {
+							return BOOL_FALSE;
+						}
+					}
+				}
+			}
 		}
 	},
 	"zero?" : {
