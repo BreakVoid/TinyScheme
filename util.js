@@ -100,7 +100,7 @@ function isEmptyChar(ch) {
 	}
 }
 
-function isInteger(str) {
+exports.isInteger = function(str) {
 	var offset = 0;
 	if (str[0] == '-') {
 		offset = 1;
@@ -113,7 +113,7 @@ function isInteger(str) {
 	return str.length > offset;
 }
 
-function isFloatNumber(str) {
+exports.isFloatNumber = function(str) {
 	var offset = 0;
 	var floatPoint = false;
 	if (str[0] == '-') {
@@ -154,12 +154,12 @@ function GetElement(str) {
 			"type" : "procedure",
 			"content" : "(quote " + trimed_str.slice(1, trimed_str.length) + ')'
 		};
-	} else if (isInteger(trimed_str)) {
+	} else if (exports.isInteger(trimed_str)) {
 		return {
 			"type" : "number-integer",
 			"content" : trimed_str
 		};
-	} else if (isFloatNumber(trimed_str)) {
+	} else if (exports.isFloatNumber(trimed_str)) {
 		return {
 			"type" : "number-float",
 			"content" : trimed_str

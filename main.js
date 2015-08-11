@@ -455,6 +455,11 @@ identifiers = {
 						result.content[i] = curScope["quote"]["exec"]([result.content[i]], curScope);
 					} else {
 						result.content[i].type = "symbol";
+						if (util.isInteger(result.content[i])) {
+							result.content[i].type = "number-integer";
+						} else if (util.isFloatNumber(result.content[i])) {
+							result.content[i].type = "number-integer";
+						}
 					}
 				}
 			} else {
@@ -469,9 +474,31 @@ identifiers = {
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
 			if (paras[0].content.length == 0) {
-				return { type : "boolean", content : true };
+				return BOOL_TRUE;
 			} else {
-				return { type : "boolean", content : false };
+				return BOOL_FALSE;
+			}
+		}
+	},
+	"pair?" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].type == "pair") {
+				return BOOL_TRUE;
+			} else {
+				return BOOL_FALSE;
+			}
+		}
+	},
+	"list?" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			if (paras[0].type == "list") {
+				return BOOL_TRUE;
+			} else {
+				return BOOL_FALSE;
 			}
 		}
 	},
