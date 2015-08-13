@@ -278,6 +278,12 @@ exports.DisplayRecursively = function(lst) {
 	for (var i = 0; i < lst.content.length - 1; ++i) {
 		if (lst.content[i].type == "list") {
 			result += exports.DisplayRecursively(lst.content[i]) + " ";
+		} else if (lst.content[i].type == "boolean") {
+			if (lst.content[i].content) {
+				result += "#t" + " ";
+			} else {
+				result += "#f" + " ";
+			}
 		} else {
 			result += lst.content[i].content + " ";
 		}

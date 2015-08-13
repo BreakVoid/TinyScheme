@@ -663,6 +663,12 @@ identifiers = {
 				process.stdout.write(" . ");
 				curScope["display"]["exec"]([paras[0].content[1]], curScope);
 				process.stdout.write(")");
+			} else if (paras[0].type == "boolean") {
+				if (paras[0].content) {
+					process.stdout.write("#t");
+				} else {
+					process.stdout.write("#f");
+				}
 			} else {
 				if (typeof paras[0].content.toString != "undefined") {
 					process.stdout.write(paras[0].content.toString());
