@@ -1,3 +1,116 @@
+(display "Markov Chain Coupling")
+(newline)
+(newline)
+
+
+(define (random seed) (modulo (* seed 3559) 10009))
+(define (capacity chain)
+  (if (eq? chain `())
+      0
+      (+ (capacity (cdr chain)) 1)))
+
+(define (chainEqv setA setB)
+   (if (or (eqv? setA `())
+           (eqv? setB `()))
+       #t
+       (if (chainEqv (cdr setA) (cdr setB))
+           (if (eqv? (car setA) (car setB))
+               #t
+               #f)
+           #f)
+       )
+)
+
+(define (findElement set e)
+  (if (eqv? set `())
+      -1
+      (begin
+        (if (eqv? (findElement (cdr set) e) -1)
+            (if (eqv? (car set) e)
+                0
+                -1)
+            (+ (findElement (cdr set) e) 1)))))
+
+
+(define simpleA `(1 2 3))
+(define simpleB `(4 5 6))
+(define seqA `(1 2 3 6 7 13 12))
+(define seqB `(8 6 11 2 7 19 18))
+(define space 20)
+
+(define (extract set num)
+  (if (eqv? num 0)
+      (car set)
+      (extract (cdr set) (- num 1))))
+
+(define (switch set num1 num2)
+  (if (eqv? set `())
+      `()
+      (if (eqv? (car set) num1)
+          (cons num2 (switch (cdr set) num1 num2))
+          (if (eqv? (car set) num2)
+              (cons num1 (switch (cdr set) num1 num2))
+              (cons (car set) (switch (cdr set) num1 num2))))))
+
+
+(define (coupling setA setB randomSeed steps)
+
+  (define targetPos (modulo randomSeed size))
+  (define element (modulo (random randomSeed) space))
+  element
+  (define eA (extract setA targetPos))
+  (define eB (extract setB targetPos))
+  eA
+  eB
+  (define swA (switch setA eA element))
+  (define swB (switch setB eB element))
+
+  (begin
+        (display "Phase ")
+        (display steps)
+        (newline)
+        (display "target element is ")
+        (display element)
+        (newline)
+        (display "target position is ")
+        (display targetPos)
+        (newline)
+        (display "current element at a_i: ")
+        (display eA)
+        (newline)
+        (display "current element at b_i: ")
+        (display eB)
+        (newline)
+        (display "current setA: ")
+        (display setA)
+        (newline)
+        (display "current setB: ")
+        (display setB)
+        (newline)
+        (newline)
+        (if (chainEqv setA setB)
+            (begin
+              (display "coupling done, total steps = ")
+              (display steps)
+              (newline)
+              )
+            (coupling swA swB (random (random randomSeed)) (+ steps 1))
+            )
+        )
+
+  )
+(newline)
+(display "simple Markov Chain")
+(newline)
+(define size (capacity simpleA))
+(coupling simpleA simpleB 12 0)
+
+(newline)
+(display "difficult one")
+(newline)
+(define size (capacity seqA))
+(coupling seqA seqB 12 0)
+
 (define (show obj)
   (display obj)
   (newline))
@@ -481,3 +594,11 @@
 (show-balance-details account)
 (define account (account 'reset 5))
 (show-balance-details account)
+
+(title "pairs and lists")
+
+(define lst '(1.1 1 2 #\c))
+(show (eqv? (cadr lst) 1))
+(show (eqv? (list-ref lst (- (length lst) 1)) #\c))
+(show (memq 2 lst))
+(show (memq 100 lst))

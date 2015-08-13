@@ -149,7 +149,7 @@ function GetElement(str) {
 			"type" : "procedure",
 			"content" : trimed_str
 		};
-	} else if (trimed_str[0] == '\'') {
+	} else if (trimed_str[0] == '\'' || trimed_str[0] == '`') {
 		return {
 			"type" : "procedure",
 			"content" : "(quote " + trimed_str.slice(1, trimed_str.length) + ')'
@@ -163,6 +163,11 @@ function GetElement(str) {
 		return {
 			"type" : "number-float",
 			"content" : trimed_str
+		};
+	} else if (trimed_str[0] == '#' && trimed_str[1] == '\\') {
+		return {
+			"type" : "char",
+			"content" : trimed_str.slice(2, trimed_str.length)
 		};
 	} else {
 		return {

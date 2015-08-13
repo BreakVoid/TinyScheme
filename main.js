@@ -14,6 +14,13 @@ memPool[FALSE_ID] = BOOL_FALSE;
 ProcessParas = function(raw_paras, curScope) {}
 
 function ProcExec(str, curScope) {
+	if (str[0] != '(' || str[str.length - 1] != ')') {
+		if (curScope[str].type == "identifier") {
+			return memPool[curScope[str].uuid];
+		} else {
+			return curScope[str];
+		}
+	}
 	var paras = util.GetElements(str.slice(1, str.length - 1));
 	if (paras[0].type == "procedure") {
 		var firstProcessResult = ProcExec(paras[0].content, curScope);
@@ -454,11 +461,20 @@ identifiers = {
 					if (result.content[i].type == "procedure") {
 						result.content[i] = curScope["quote"]["exec"]([result.content[i]], curScope);
 					} else {
-						result.content[i].type = "symbol";
-						if (util.isInteger(result.content[i])) {
+						if (util.isInteger(result.content[i].content)) {
 							result.content[i].type = "number-integer";
-						} else if (util.isFloatNumber(result.content[i])) {
+						} else if (util.isFloatNumber(result.content[i].content)) {
 							result.content[i].type = "number-integer";
+						} else if (result.content[i].content[0] == '#' && result.content[i].length >= 2 && result.content[i].content[1] == '\\') {
+							result.content[i].type = "char";
+						} else if (result.content[i].content[0] == '#' && result.content[i].length >= 2 && result.content[i].content[1] == 't') {
+							result.content[i].type = "boolean";
+							result.content[i].content = true;
+						} else if (result.content[i].content[0] == '#' && result.content[i].length >= 2 && result.content[i].content[1] == 'f') {
+							result.content[i].type = "boolean";
+							result.content[i].content = false;
+						} else if (result.content[i].type == "identifier") {
+							result.content[i].type = "symbol";
 						}
 					}
 				}
@@ -485,6 +501,8 @@ identifiers = {
 		"exec" : function(raw_paras, curScope) {
 			var paras = ProcessParas(raw_paras, curScope);
 			if (paras[0].type == "pair") {
+				return BOOL_TRUE;
+			} else if (paras[0].type == "list" && paras[0].content.length == 2) {
 				return BOOL_TRUE;
 			} else {
 				return BOOL_FALSE;
@@ -566,6 +584,13 @@ identifiers = {
 			return result;
 		}
 	},
+	"list-ref" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			return paras[0].content[parseInt(paras[1].content)];
+		}
+	},
 	"car" : {
 		"type" : "syntax",
 		"exec" : function(raw_paras, curScope) {
@@ -639,7 +664,12 @@ identifiers = {
 				curScope["display"]["exec"]([paras[0].content[1]], curScope);
 				process.stdout.write(")");
 			} else {
-				process.stdout.write(paras[0].content.toString());
+				if (typeof paras[0].content.toString != "undefined") {
+					process.stdout.write(paras[0].content.toString());
+				} else {
+					process.stdout.write(paras[0].content);
+				}
+
 			}
 		}
 	},
@@ -968,6 +998,12 @@ identifiers = {
 				} else {
 					return BOOL_FALSE;
 				}
+			} else if (paras[0].type == "char") {
+				if (paras[0].content == paras[1].content) {
+					return BOOL_TRUE;
+				} else {
+					return BOOL_FALSE;
+				}
 			} else {
 				if (paras[0] == paras[1]) {
 					return BOOL_TRUE;
@@ -1025,6 +1061,12 @@ identifiers = {
 						} else {
 							return BOOL_FALSE;
 						}
+					} else if (paras[0].type == "char") {
+						if (paras[0].content == paras[1].content) {
+							return BOOL_TRUE;
+						} else {
+							return BOOL_FALSE;
+						}
 					} else {
 						if (paras[0] == paras[1]) {
 							return BOOL_TRUE;
@@ -1076,6 +1118,29 @@ identifiers = {
 				"content" : paras[0].content.toLowerCase()
 			};
 			return result;
+		}
+	},
+	"begin" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			for (var i = 0; i < raw_paras.length; ++i) {
+				ProcExec(raw_paras[i].content, curScope);
+			}
+		}
+	},
+	"memq" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			for (var i = 0; i < paras[1].content.length; ++i) {
+				if (curScope["equal?"]["exec"]([paras[0], paras[1].content[i]], curScope).content) {
+					return {
+						"type" : "list",
+						"content" : paras[1].content.slice(i, paras[1].content.length)
+					};
+				}
+			}
+			return BOOL_FALSE;
 		}
 	}
 };
