@@ -16,8 +16,8 @@ exports.GetSentences = function(str) {
 		if (inComment) {
 			if (str[i] == '\n') {
 				inComment = false;
-				continue;
 			}
+			continue;
 		}
 		if (str[i] == ';') {
 			inComment = true;

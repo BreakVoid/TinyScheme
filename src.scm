@@ -1,3 +1,7 @@
+;;;;(display "Good Job")
+(display "Test Comment")
+;(display "Test")
+
 (display "Markov Chain Coupling")
 (newline)
 (newline)
