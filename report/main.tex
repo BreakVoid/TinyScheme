@@ -153,7 +153,7 @@
 			
 			函数在执行时会对scope执行一次复制（浅复制），然后以副本作为当前的可见域执行语句。
 		\subsection{一些等价的转换}
-			\subsection{let}
+			\subsubsection{let}
 				在实现中，把let环境转换为lambda表达式执行，如：
 \begin{lstlisting}[language=lisp]
 (let ((var1 expr1)
@@ -173,7 +173,7 @@
 	expr1 expr2 ... exprN)
 \end{lstlisting}
 
-			\subsection{let*}
+			\subsubsection{let*}
 				在实现时，let*环境被视为let环境的嵌套，如：
 \begin{lstlisting}[language=lisp]
 (let* ((var1 expr1)
@@ -189,7 +189,7 @@
 		body2))
 \end{lstlisting}
 
-			\subsection{letrec}
+			\subsubsection{letrec}
 				letrec环境被lambda语句重新封装，如：
 \begin{lstlisting}[language=lisp]
 (letrec ((<var1> <expr1>)
@@ -221,6 +221,7 @@
 				\item quote
 				\item display
 				\item newline
+				\item let,let*,letrec
 			\end{itemize}
 		\subsection{数值运算相关}
 			\begin{itemize}
@@ -261,7 +262,20 @@
 				\item list?
 			\end{itemize}
 	\section{总结}
-		
+		\subsection{过程中的收获}
+			开始的时候由于考虑用什么语言来完成纠结了很久。先后考虑了C++、Python、Haskell和Javascript，但是由于我之前并不会这两门语言，所以用了一个星期的时间来学习。最后基于以下几点选择了Javascript：
+			\begin{enumerate}
+				\item Scheme是弱类型语言，而Javascript也是弱类型语言，这样可以避免用强类型语言来模拟弱类型语言时复杂的抽象过程。
+				\item Javascript的执行效率令人满意，不像Python的效率那么令人堪忧。
+				\item Javascript的语法与C++相似。
+				\item 可以轻松的获得开源的高精度运算库。
+			\end{enumerate}	
+			
+			在完成解释器，积累了大量的经验之余掌握了两门编程语言，这也算是额外的收获吧。
+		\subsection{设计上的优点}
+			本人对自己的设计还是比较看好的。利用Javascript的语言特性使得我可以很轻松地在现有代码的基础上增加对新的语法的支持而不需要改动大量的代码。\footnote{只要在./main.js中加入对相关语法行为的定义就好了。}
+		\subsection{关于语法糖的一些看法}
+			由于Scheme本身并不支持迭代，需要通过递归操作完成对list的遍历。在没有对尾递归进行优化的情况下会造成递归引起巨大的内存消耗，从而让程序的执行效率降低。因此，虽然在编写中使用“语法糖”可以减少很多的代码量，但是这会使得许多原本可以用线性迭代模拟的操作因为没有尾递归优化而变成了线性递归的操作，这是让人不能接受的。\footnote{虽然我不支持使用它，但是在实现let环境的时候我还是“偷懒”地用了，因为把它等价转换之后实在是太简单了。}
 		\subsection{存在的一些问题}
-		由于Javascript的栈空间不足，在大量深度递归的时候有可能会栈溢出。同时由于代码在处理函数递归时的优化较少，出现复杂的函数调用时效率会受到一定的影响。同时变量内存空间的管理完全地托管给Javascript的垃圾回收机制故不适合处理大量数据的情况。
+			由于Javascript的栈空间不足，在大量深度递归的时候有可能会栈溢出。同时由于代码在处理函数递归时的优化较少，出现复杂的函数调用时效率会受到一定的影响。同时变量内存空间的管理完全地托管给Javascript的垃圾回收机制故不适合处理大量数据的情况。
 \end{document}
