@@ -1,0 +1,267 @@
+\documentclass[11pt, a4paper]{article}
+\usepackage{ctex}
+\usepackage[body={14.64cm, 24.62cm}, centering, dvipdfm]{geometry}
+
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{color}
+\usepackage{fontspec}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{extramarks}
+\usepackage{amsmath}
+\setmainfont{Times New Roman}
+\setmonofont{Consolas}
+\usepackage{tikz}
+\usepackage{wallpaper}
+\newcommand\BackgroundPicture{%
+	\put(0,0){%
+		\parbox[b][\paperheight]{\paperwidth}{%
+			\vfill
+			\centering%
+			\begin{tikzpicture}[remember picture,overlay]
+			\node [rotate=0,scale=1.1,text opacity=0.075] at (current page.center)
+			{ 
+				\includegraphics{SJTU_BLUE.png}       %\copyright XXX Powered by~\LaTeX
+			};
+			\end{tikzpicture}%
+			%      \vfill
+		}}}
+		
+\definecolor{mygreen}{rgb}{0,0.6,0}
+\definecolor{mygray}{rgb}{0.5,0.5,0.5}
+\definecolor{mymauve}{rgb}{0.58,0,0.82}
+
+\newfontface\YaHeiMono{Microsoft YaHei Mono}
+\newfontface\newSimSum{新宋体}
+
+\lstdefinelanguage{JavaScript}{
+	keywords={typeof, new, true, false, catch, function, return, null, catch, switch, var, if, in, while, do, else, case, break},
+	keywordstyle=\color{blue}\bfseries,
+	ndkeywords={class, export, boolean, throw, implements, import, this},
+	ndkeywordstyle=\color{darkgray}\bfseries,
+	identifierstyle=\color{black},
+	sensitive=false,
+	comment=[l]{//},
+	morecomment=[s]{/*}{*/},
+	commentstyle=\color{purple}\ttfamily,
+	stringstyle=\color{red}\ttfamily,
+	morestring=[b]',
+	morestring=[b]"
+}
+
+\lstset{ %
+	backgroundcolor=\color{white},   % choose the background color; you must add \usepackage{color} or \usepackage{xcolor}
+	basicstyle=\scriptsize \YaHeiMono,        % the size of the fonts that are used for the code
+	breakatwhitespace=true,         % sets if automatic breaks should only happen at whitespace
+	breaklines=true,                 % sets automatic line breaking
+	captionpos=none,                    % sets the caption-position to bottom
+	commentstyle=\color{mygreen} \newSimSum,
+	morecomment=[l][\color{magenta}]{\#},    % comment style
+	deletekeywords={...},            % if you want to delete keywords from the given language
+	escapeinside={\%*}{*)},          % if you want to add LaTeX within your code
+	extendedchars=true,              % lets you use non-ASCII characters; for 8-bits encodings only, does not work with UTF-8
+	framexleftmargin=0.5em,
+	frame=single,                    % adds a frame around the code
+	keepspaces=true,                 % keeps spaces in text, useful for keeping indentation of code (possibly needs columns=flexible)
+	keywordstyle=\color{blue},       % keyword style
+	language=C++,                 % the language of the code
+	otherkeywords={*,...},            % if you want to add more keywords to the set
+	numbers=none,                    % where to put the line-numbers; possible values are (none, left, right)
+	numbersep=1.5em,                   % how far the line-numbers are from the code
+	numberstyle=\tiny\color{mygray}, % the style that is used for the line-numbers
+	rulecolor=\color{black},         % if not set, the frame-color may be changed on line-breaks within not-black text (e.g. comments (green here))
+	showspaces=false,                % show spaces everywhere adding particular underscores; it overrides 'showstringspaces'
+	showstringspaces=false,          % underline spaces within strings only
+	showtabs=false,                  % show tabs within strings adding particular underscores
+	stepnumber=1,                    % the step between two line-numbers. If it's 1, each line will be numbered
+	stringstyle=\color{red},     % string literal style
+	tabsize=4,                       % sets default tabsize to 2 spaces
+	xleftmargin=2em,xrightmargin=2em  
+}
+
+\title{TinyScheme——一个微型Scheme语言解释器}
+\author{柯嵩宇 \\ 上海交通大学}
+
+\begin{document}
+	\AddToShipoutPicture{\BackgroundPicture}
+	\maketitle
+	\tableofcontents
+	\newpage
+	
+	\section{简介}	
+	一个实现了基本Scheme语言语法的解释器。
+	\section{运行环境}
+		解释器用Javascript编写，运行环境为node.js(v0.12.7)。使用了开源的高精度库number-crunch实现对大整数运算的支持。项目目录中已经包含了该模块(./node\_modules/number-crunch)，若没有该模块可以执行：\verb|npm install number-crunch|获取。\footnote{通过npm方式获取的number-crunch库有一个小bug——不能够将内部数据类型的负数转换成字符串形式，我在GitHub上与源代码一起提供了我修改后的number-crunch库。}
+		
+		执行的时候保证main.js,util.js以及包含number-crunch库的node\_modules目录在一个文件夹下，在终端中执行命令“node ./main.js”。解释器会从"./src.scm"中读取Scheme并解释执行，同时将执行结果输出到标准输出(stdout)上。
+		\subsection{number-crunch库简介}
+			用Javascript编写的开源高精度库，用28位整数数组来实现对大整数的存储和运算，提供了将字符串表示的大整数转换为运算所需的整数数组以及将结果重新转换成字符串表示的函数。
+			
+			支持的大整数操作包括：
+			\begin{itemize}
+				\item 加、减、乘、除、取模
+				\item 大整数开平方根（向零取整）
+				\item 乘法逆元等常用的整数运算算法。
+			\end{itemize}
+	\section{项目的实现}
+		\subsection{运行细节}
+			解释器启动时先进行一系列的初始化操作后会从"./src.scm"中读取Scheme语言语句，然后通过util.GetSentents函数将源代码文件分割为单独的语句并且逐句执行。
+			
+			通过ProcExec函数执行已划分好的每一条语句。
+			
+			ProcExec通过调用util.GetElements进行语句的分词，获取每一个参数的类型，然后通过ProcessParas处理参数，获得参数的实际值，然后根据被调用的过程来执行不同的处理操作。
+		\subsection{语法和函数}
+			在编写代码的时候，我把过程分为语法(syntax)和函数(function)两类，两者的区别是，函数有自己的域(scope)，管理函数内定义的局部变量，而语法没有，执行语法时始终从当前可见域中获取数据。由于Javascript对于对象的赋值都是地址赋值，所以在传递参数的时候加上可见域不会对效率造成致命的影响。\footnote{函数定义时会记录当前的可见域，同时在函数调用的时候会对该函数的可见域进行一层拷贝（不需要深度拷贝），因此，在大量递归的时的表现并不是很好，而且由于Javascript栈空间不足，N皇后问题最多只能支持到7皇后。}
+			
+			在Scheme语法标准中，Scheme的解释器必须对尾递归进行优化，但是由于我不能找到正确判断是否为尾递归的方法，因此就没有对函数尾递归进行优化。
+		\subsection{数据的存储}
+			Scheme语言本身是弱类型的，但是在运算时不同的数据类型会有不一样的表现。同时考虑到Javascript同样也是弱类型语言，解释器采用了下面的object来保存数据：
+\begin{lstlisting}[language=Javascript]
+{
+	"type" : ***,
+	***
+}
+\end{lstlisting}
+		\subsection{支持的数据类型}
+			\begin{enumerate}
+				\item integer
+				\item float
+				\item char
+				\item string
+				\item pair
+				\item list
+				\item symbol
+				\item function
+			\end{enumerate}
+		\subsection{函数的实现细节}
+			采用了下面的结构来保存函数的信息：
+\begin{lstlisting}[language=Javascript]
+{
+	"type" : "function",
+	"paraList" : [...],
+	"body" : [...],
+	"scope" : {...},
+}
+\end{lstlisting}
+			\begin{description}
+				\item[type] 表示这个对象的类型是一个函数。
+				\item[paraList] 函数的形参列表。
+				\item[body] 保存函数体的每一条语句。
+				\item[scope] 保存函数执行前的可见域。\footnote{用于实现Lexcial Scope}
+			\end{description}
+			
+			函数在执行时会对scope执行一次复制（浅复制），然后以副本作为当前的可见域执行语句。
+		\subsection{一些等价的转换}
+			\subsection{let}
+				在实现中，把let环境转换为lambda表达式执行，如：
+\begin{lstlisting}[language=lisp]
+(let ((var1 expr1)
+      (var2 expr2)
+      ...
+      (varN exprN))
+     body1
+     ...
+     bodyN)
+\end{lstlisting}
+转换为：
+\begin{lstlisting}[language=lisp]
+((lambda (var1 var2 ... varN)
+	body1
+	...
+	bodyN)
+	expr1 expr2 ... exprN)
+\end{lstlisting}
+
+			\subsection{let*}
+				在实现时，let*环境被视为let环境的嵌套，如：
+\begin{lstlisting}[language=lisp]
+(let* ((var1 expr1)
+       (var2 expr2))
+      body1
+      body2)
+\end{lstlisting}
+转换为：
+\begin{lstlisting}[language=lisp]
+(let ((var1 expr1))
+	(let ((var2 expr2))
+		body1
+		body2))
+\end{lstlisting}
+
+			\subsection{letrec}
+				letrec环境被lambda语句重新封装，如：
+\begin{lstlisting}[language=lisp]
+(letrec ((<var1> <expr1>)
+         (<var2> <expr2>))
+		body1
+		body2)
+\end{lstlisting}
+转换为：
+\begin{lstlisting}[language=lisp]
+((lambda ()
+	(define <var1>.1 expr1)
+	(define <var2>.1 expr2)
+	(define <var1> <var1>.1)
+	(define <var2> <var2>.1)
+	body1
+	body2))
+\end{lstlisting}
+
+	\section{实现的语法}
+		\subsection{基本语法}
+			\begin{itemize}
+				\item define
+				\item lambda
+				\item map
+				\item apply
+				\item if
+				\item cond
+				\item begin
+				\item quote
+				\item display
+				\item newline
+			\end{itemize}
+		\subsection{数值运算相关}
+			\begin{itemize}
+				\item $+,-,*,/$
+				\item quotient
+				\item modulo
+				\item sqr
+			\end{itemize}
+		\subsection{逻辑运算相关}
+			\begin{itemize}
+				\item and
+				\item or
+				\item not
+			\end{itemize}
+		\subsection{list和pair相关}
+			\begin{itemize}
+				\item list
+				\item cons
+				\item car
+				\item cdr
+				\item length
+				\item append
+				\item reverse
+				\item list-ref
+				\item memq
+				\item assq
+			\end{itemize}
+		\subsection{一元断言与二元断言}
+			\begin{itemize}
+				\item eq?\footnote{该断言可能存在一些问题，在MIT Scheme的参考手册中，eq?的存在大量未定义的行为。}
+				\item eqv?
+				\item equal?
+				\item $<,>,=,\leq$
+				\item zero?
+				\item string=?
+				\item null?
+				\item pair?
+				\item list?
+			\end{itemize}
+	\section{总结}
+		
+		\subsection{存在的一些问题}
+		由于Javascript的栈空间不足，在大量深度递归的时候有可能会栈溢出。同时由于代码在处理函数递归时的优化较少，出现复杂的函数调用时效率会受到一定的影响。同时变量内存空间的管理完全地托管给Javascript的垃圾回收机制故不适合处理大量数据的情况。
+\end{document}

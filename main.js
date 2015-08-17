@@ -1148,6 +1148,18 @@ identifiers = {
 			}
 			return BOOL_FALSE;
 		}
+	},
+	"assq" : {
+		"type" : "syntax",
+		"exec" : function(raw_paras, curScope) {
+			var paras = ProcessParas(raw_paras, curScope);
+			for (var i = 0; i < paras[1].content.length; ++i) {
+				if (paras[0].content == paras[1].content[i].content[0].content) {
+					return paras[1].content[i];
+				}
+			}
+			return BOOL_FALSE;
+		}
 	}
 };
 

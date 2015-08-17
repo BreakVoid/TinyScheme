@@ -1,128 +1,6 @@
-;;;;(display "Good Job")
-(display "Test Comment")
-;(display "Test")
+;;; test without side effect
 
-(display "Markov Chain Coupling")
-(newline)
-(newline)
-
-
-(define (random seed) (modulo (* seed 3559) 10009))
-(define (capacity chain)
-  (if (eq? chain `())
-      0
-      (+ (capacity (cdr chain)) 1)))
-
-(define (chainEqv setA setB)
-   (if (or (eqv? setA `())
-           (eqv? setB `()))
-       #t
-       (if (chainEqv (cdr setA) (cdr setB))
-           (if (eqv? (car setA) (car setB))
-               #t
-               #f)
-           #f)
-       )
-)
-
-(define (findElement set e)
-  (if (eqv? set `())
-      -1
-      (begin
-        (if (eqv? (findElement (cdr set) e) -1)
-            (if (eqv? (car set) e)
-                0
-                -1)
-            (+ (findElement (cdr set) e) 1)))))
-
-
-(define simpleA `(1 2 3))
-(define simpleB `(4 5 6))
-(define seqA `(1 2 3 6 7 13 12))
-(define seqB `(8 6 11 2 7 19 18))
-(define space 20)
-
-(define (extract set num)
-  (if (eqv? num 0)
-      (car set)
-      (extract (cdr set) (- num 1))))
-
-(define (switch set num1 num2)
-  (if (eqv? set `())
-      `()
-      (if (eqv? (car set) num1)
-          (cons num2 (switch (cdr set) num1 num2))
-          (if (eqv? (car set) num2)
-              (cons num1 (switch (cdr set) num1 num2))
-              (cons (car set) (switch (cdr set) num1 num2))))))
-
-
-(define (coupling setA setB randomSeed steps)
-
-  (define targetPos (modulo randomSeed size))
-  (define element (modulo (random randomSeed) space))
-  element
-  (define eA (extract setA targetPos))
-  (define eB (extract setB targetPos))
-  eA
-  eB
-  (define swA (switch setA eA element))
-  (define swB (switch setB eB element))
-
-  (begin
-        (display "Phase ")
-        (display steps)
-        (newline)
-        (display "target element is ")
-        (display element)
-        (newline)
-        (display "target position is ")
-        (display targetPos)
-        (newline)
-        (display "current element at a_i: ")
-        (display eA)
-        (newline)
-        (display "current element at b_i: ")
-        (display eB)
-        (newline)
-        (display "current setA: ")
-        (display setA)
-        (newline)
-        (display "current setB: ")
-        (display setB)
-        (newline)
-        (newline)
-        (if (chainEqv setA setB)
-            (begin
-              (display "coupling done, total steps = ")
-              (display steps)
-              (newline)
-              )
-            (coupling swA swB (random (random randomSeed)) (+ steps 1))
-            )
-        )
-
-  )
-(newline)
-(display "simple Markov Chain")
-(newline)
-(define size (capacity simpleA))
-(coupling simpleA simpleB 12 0)
-
-(newline)
-(display "difficult one")
-(newline)
-(define size (capacity seqA))
-(coupling seqA seqB 12 0)
-
-(define (show obj)
-  (display obj)
-  (newline))
-
-(define (title obj)
-  (newline)
-  (show obj))
-
+;;; utilities
 (define (filter pred? lst)
   (if (null? lst)
       '()
@@ -149,81 +27,41 @@
       #t
       (and (pred? (car lst)) (all-of? pred? (cdr lst)))))
 
-(show (+ 2 4))
-(show (+ 21344 23721 23127 234887421397431234987493128642373473647162347789347 34712384678796779354981327478973 -324823798561982347))
-(define x 23123123)
-(define y 2312343)
-(show (+ x y))
-(define 123123xx23 23847346782)
-(define 238mq2h 21312499784)
-(define 123871k x)
-(show (+ x x x x y y y 123123xx23 123123xx23 -1236764 21896345))
-(define result (+ x x x x y y y 123123xx23 123123xx23 -1236764 21896345))
-(show result)
-(define fx 0.21312)
-(define fy 0.12312)
-(show (+ fx fy))
-(define fz (+ fx fx fy fy))
-(show fz)
-(show (+ (+ (+ 1 1)
-    (+ 1 2)
-    (+ 1 3))
-   (+ 4 5)))
+(define (show obj)
+  (display obj)
+  (newline))
 
-(show (* 2.5 2.5))
-(show (* 213123 23123 12312312))
-(show (* 213123 2.23216726372))
+(define (title obj)
+  (newline)
+  (show obj))
 
-(show (- 12372312674 2836824 3762))
-(show (- 4 5))
-(show (- 0.4 0.5))
+(show "Test without side effect")
 
-(show (+ (* (- 4 5)
-          -3
-          6)
-         (- 287 187)))
+;;; basic operations
+(title "basic operations")
+(define _1 1)
+(define _2 2)
+(define (_3) 3)
+(show (+ _1 _2 (_3)))   ;;6
+(show (- _2 (_3)))  ;;-1
+(show (* _2 (_3)))      ;;6
+(show (/ _2 (_3)))      ;;2/3
+(show (quotient _2 (_3)))  ;; 0
+(show (modulo _2 (_3)))  ;; 2
+(show (if (= _1 1)
+             (_3)
+             _2))    ;;3
 
-(show (if #f 2 3))
-(show (if #f (+ 4 6) (- 92 3412)))
-(show (if (> 3 23) (+ 3 2) (- 2 3)))
-(show "-----------------------------")
-(show (if (and (> 3 2) #t #t (< 4 10)) (* 12123 123) (= 4 4)))
-(show (if (and (> 3 2) #t #f (< 4 10)) (* 12123 123) (= 4 4)))
-(show (if (or (< 3 2) #t #f (< 4 10)) (* 12123 2321) (= 4 4)))
+;;; try some big numbers
+(title "big numbers")
+(define _4 12345678901234567890)
+(define _5 98765432109876543210)
+(show (* (- _4 _5) (+ _4 200 _5)))  ;; -9602194792318244175459533629632373116000
 
-(define foo (if (> 78 12) (+ (+ 2 3) 3) (- (* 3 4 3) 1 2)))
-(show foo)
-
-(define rrr (cond ((= foo 9) 512) (else (/ 1287218 1213.2))))
-(show rrr)
-
-(define (square x) (* x x))
-
-(show (square (square 512)))
-
-(define (compare opt a b)
-  (opt a b))
-
-(show (if (compare > 3 2) (- 3 2) (- 2 3)))
-(show (if (compare < 3 2) (- 3 2) (- 2 3)))
-
-
-(define aaa 4)
-(define (id) aaa)
-(define (fun1 aaa) (id))
-(show (fun1 5))
-(fun1 11)
-(show (fun1 23))
-
-(define (double-opt fun x) (fun (fun x)))
-(show (double-opt square 16))
-
-(show (square (double-opt square (double-opt square 16))))
-
+;;; fast-exp
+(title "fast-exp")
 (define (sqr x) (* x x))
 (define (my-odd? n) (= (modulo n 2) 1))
-
-(show "---------------------------------------------------------")
 
 (define (fast-exp a n)
   (if (= n 0)
@@ -232,121 +70,11 @@
           (* a (sqr (fast-exp a (quotient n 2))))
           (sqr (fast-exp a (quotient n 2))))))
 
-(show (fast-exp 2 0))
-(show (fast-exp 2 5))
-(show (fast-exp 2 100))
+(show (fast-exp 2 0)) ;; 1
+(show (fast-exp 2 5)) ;; 32
+(show (fast-exp 2 100)) ;; 1267650600228229401496703205376
 
-(define _4 12345678901234567890)
-(define _5 98765432109876543210)
-(show (* (- _4 _5) (+ _4 200 _5)))
-
-(show '(1 2 3 4 5))
-(show ''(1 2 3 4 5))
-(show '''(1 2 23 4 2 2))
-
-(show (null? '()))
-(show (null? '(1)))
-
-(show "Test without side effect")
-
-(title "basic operations")
-(define _1 1)
-(define _2 2)
-(define (_3) 3)
-(show (+ _1 _2 (_3)))
-(show (- _2 (_3)))
-(show (* _2 (_3)))
-(show (/ _2 (_3)))
-(show (quotient _2 (_3)))
-(show (modulo _2 (_3)))
-(show (if (= _1 1)
-             (_3)
-             _2))
-
-(title "compute e")
-(define (computeE e k f m)
-  (if (> k m)
-      e
-      (computeE (+ e (/ 1.0 f)) (+ k 1) (* f k) m)))
-(show (computeE 0 1 1.0 1000))
-
-(define (factional n)
-  (if (< n 2)
-    1
-    (* n (factional (- n 1)))))
-(show (factional 10))
-
-(show (fast-exp 2 0))
-(show (fast-exp 2 5))
-(show (fast-exp 2 100))
-(show (fast-exp 2 0))
-(show (fast-exp 2 5))
-(show (fast-exp 2 1000))
-
-(define quick-pow (lambda (a n)
-  (if (= n 0)
-    1
-    (if (= (modulo n 2) 1)
-      (* (quick-pow (* a a) (quotient n 2)) a)
-      (quick-pow (* a a) (quotient n 2))))))
-
-(show (quick-pow 2 0))
-(show (quick-pow 2 5))
-
-(define lst1 '(2 3 4))
-(define lst2 (cons 1 lst1))
-(show lst2)
-(show (cons 0 (cons 1 lst1)))
-(show (car lst1))
-(show (car lst2))
-(show (cdr lst1))
-(show (cdr lst2))
-
-(define (interval start end)
-  (if (= start end)
-      '()
-      (cons start (interval (+ start 1) end))))
-
-(show (interval 1 20))
-
-(define (filter pred? lst)
-  (if (null? lst)
-      '()
-      (if (pred? (car lst))
-          (cons (car lst) (filter pred? (cdr lst)))
-          (filter pred? (cdr lst)))))
-
-(define lst1-to50 (interval 1 51))
-(define (greater-than25 x)
-  (> x 25))
-
-(show (filter greater-than25 lst1-to50))
-(show
-  ((lambda (n) (+ n n)) 5))
-
-(show
-  (let ((x 2) (y 3))
-  (* x y)))
-
-(show
-  (let ((x 2) (y 3))
-  (let* ((x 7)
-         (z (+ x y)))
-    (* z x))))
-
-(show
-  (letrec ((even?
-          (lambda (n)
-            (if (zero? n)
-                #t
-                (odd? (- n 1)))))
-         (odd?
-          (lambda (n)
-            (if (zero? n)
-                #f
-                (even? (- n 1))))))
-  (even? 88)))
-
+;;; fibonacci
 (title "fibonacci sequence")
 (define fib
   (lambda (n)
@@ -356,132 +84,21 @@
                              (calc-fib now (+ prev now) (- n 1))))))
       (calc-fib 0 1 n))))
 
-(show (fib 5))
-(show (fib 20))
-(show (fib 32))
+(show (fib 5))  ;; 5
+(show (fib 20)) ;; 6765
+(show (fib 32))  ;; 2178309, test how good your memory management is
+;; (define unused_var (fib 50000)) ;; test this if you have implemented tail call optimization
 
-(show (cons
-  '(1 2 3 4 5) '(1 2 3 4 6)))
-(show
-  (cons
-    (cons 1 2)
-    (cons 2 3)))
+;;; the computeE
+(title "compute e")
+(define (computeE e k f m)
+  (if (> k m)
+      e
+      (computeE (+ e (/ 1.0 f)) (+ k 1) (* f k) m)))
 
-(show
-  (cons 'a '(b c)))
+(show (computeE 0 1 1.0 100))  ;; 2.7182818##
 
-(show
-  (list 'a (+ 3 4) 'c))
-(show (list))
-
-(show
-  (append '(x) '(y)))
-
-(show
-  (append '(a (b)) '((c))))
-(show
-  (append '(a b) '(c . d)))
-
-(title "Test Syntax Map")
-
-(define 1to50 (interval 1 51))
-(define ress
-  (map
-    (lambda (x)
-      (if (> x 15)
-        x
-        -1))
-    1to50))
-(show ress)
-
-(show
-  (apply append
-    (list '(1) '(2))))
-
-(title "N-queens")
-(define (NQU size)
-  (define all-cols (interval 1 (+ size 1)))
-  (define (valid? n configuration)
-    (and (none-of? (lambda (col) (= (car configuration) col)) (cdr configuration))
-         (none-of? (lambda (diag) (= (- n (car configuration)) diag))
-                   (map - (interval (+ n 1) (+ size 1)) (cdr configuration)))
-         (none-of? (lambda (cdiag) (= (+ n (car configuration)) cdiag))
-                   (map + (interval (+ n 1) (+ size 1)) (cdr configuration)))))
-
-  (define (choose-col n)
-    (if (= n (+ size 1))
-        (list '())
-        (filter
-         (lambda (configuration) (valid? n configuration))
-         (flatmap
-          (lambda (configuration)
-            (map (lambda (sel) (cons sel configuration))
-                 all-cols))
-          (choose-col (+ n 1))))))
-  (choose-col 1))
-
-(show (length (NQU 5)))
-
-(show
-  (eqv? 'a 'a))
-(show
-  (not (eqv? 'a 'b)))
-
-(show
-  (let ((lst (cons 1 2)))
-         (eqv? lst lst)))
-
-(define (hanoi src dest mid n)
-  (if (= n 0)
-      '()
-      (append (hanoi src mid dest (- n 1))
-              (list (list src dest))
-              (hanoi mid dest src (- n 1)))))
-
-
-(title "hanoi")
-(show (hanoi 'a 'b 'c 3))
-
-(title "let-bindins")
-(define var1 1)
-(show (let ((var1 2)
-               (y (lambda () var1)))
-           (y)))
-(show (let* ((var1 2)
-                (y (lambda () var1)))
-           (y)))
-(show (letrec ((var1 2)
-                  (y (lambda () var1)))
-           (y)))
-(show (let* ((var1 2)
-             (y var1))
-           y))
-
-(title "infinite stream")
-(define (make-stream start step)
-  (cons start (lambda () (make-stream (+ start step) step))))
-(define (head stream) (car stream))
-(define (tail stream) ((cdr stream)))
-(define (nth-from stream n)
-  (if (= n 0)
-      stream
-      (nth-from (tail stream) (- n 1))))
-
-(define stream (make-stream 0 1))
-(show (head stream))
-(show (head (nth-from stream 4)))
-(define stream (nth-from stream 100))
-(show (head stream))
-
-(define (stream-map func . streams)
-  (cons (apply func (map head streams))
-        (lambda ()
-          (apply stream-map (append (list func) (map tail streams))))))
-(define sqrn-minus-n
-  (stream-map - (stream-map sqr (make-stream 0 1)) (make-stream 0 1)))
-(show (head (nth-from sqrn-minus-n 5)))
-(show (head (nth-from sqrn-minus-n 100)))
-
+;;; predicates
 (title "predicate eqv?")
 (show (and
        (eqv? 'a 'a)
@@ -495,7 +112,24 @@
        (not (eqv? (lambda () 1) (lambda () 2)))
        (not (eqv? #f 'nil))
        (let ((p (lambda (x) x)))
-        (eqv? p p))))
+        (eqv? p p)))) ;; #t
+
+(title "predicate eq?")
+(define (compare-eq?-eqv? x y) (eq? (eq? x y) (eqv? x y)))
+(show (and
+       (eq? #t #t)
+       (eq? #f #f)
+       (compare-eq?-eqv? 'a 'a)
+       (compare-eq?-eqv? 'a 'b)
+       (compare-eq?-eqv? 'lowercase 'LOwERcaSE)
+       (compare-eq?-eqv? '() '())
+       (compare-eq?-eqv? (cons 1 2) (cons 1 2))
+       (let ((lst (cons 1 2)))
+         (compare-eq?-eqv? lst lst))
+       (compare-eq?-eqv? (lambda () 1) (lambda () 2))
+       (compare-eq?-eqv? #f 'nil)
+       (let ((p (lambda (x) x)))
+         (compare-eq?-eqv? p p)))) ;; #t
 
 (title "predicate equal?")
 (define (compare-equal?-eqv? x y)
@@ -520,26 +154,114 @@
        (equal? '(a) '(a))
        (equal? '(a (b) c) '(a (b) c))
        (equal? "abc" "abc")
-       (equal? 2 2)))
+       (equal? 2 2))) ;; #t
 
-(title "predicate eq?")
-(define (compare-eq?-eqv? x y) (eq? (eq? x y) (eqv? x y)))
-(show (and
-       (eq? #t #t)
-       (eq? #f #f)
-       (compare-eq?-eqv? 'a 'a)
-       (compare-eq?-eqv? 'a 'b)
-       (compare-eq?-eqv? 'lowercase 'LOwERcaSE)
-       (compare-eq?-eqv? '() '())
-       (compare-eq?-eqv? (cons 1 2) (cons 1 2))
-       (let ((lst (cons 1 2)))
-         (compare-eq?-eqv? lst lst))
-       (compare-eq?-eqv? (lambda () 1) (lambda () 2))
-       (compare-eq?-eqv? #f 'nil)
-       (let ((p (lambda (x) x)))
-         (compare-eq?-eqv? p p))))
+;;; pairs and lists
+(title "pairs and lists")
+(show
+ (and (equal? '(1 2 3 4) (list 1 2 3 4))
+      (equal? (list 1 2 3 4) (cons 1 (cons 2 (cons 3 (cons 4 '())))))
+      (equal? (cons 1 (cons 2 (cons 3 (cons 4 '())))) '(1 2 3 4))
+      (not (pair? '()))
+      (list? '())
+      (pair? (cons 1 2))
+      (not (list? (cons 1 2)))
+      (pair? '(1 2))
+      (list? '(1 2))))  ;; #t
 
 
+(define lst '(1.1 1 2 #\c))
+(show (eqv? (cadr lst) 1))  ;; #t
+(show (eqv? (list-ref lst (- (length lst) 1)) #\c))  ;; #t
+(show (memq 2 lst))  ;; (2 #\c)
+(show (memq 100 lst)) ;; #f
+
+(let ((table '((apple 0)
+              (banana 1)
+              (strawberry 2))))
+  (show (assq 'banana table))
+  (show (assq 'pineapple table)))
+;; (banana 1)
+;; #f
+
+(define (hanoi src dest mid n)
+  (if (= n 0)
+      '()
+      (append (hanoi src mid dest (- n 1))
+              (list (list src dest))
+              (hanoi mid dest src (- n 1)))))
+
+(show (hanoi 'a 'b 'c 3))  ;; ((a b) (a c) (b c) (a b) (c a) (c b) (a b))
+
+;;; infinite stream
+(title "infinite stream")
+(define (make-stream start step)
+  (cons start (lambda () (make-stream (+ start step) step))))
+(define (head stream) (car stream))
+(define (tail stream) ((cdr stream)))
+(define (nth-from stream n)
+  (if (= n 0)
+      stream
+      (nth-from (tail stream) (- n 1))))
+
+(define stream (make-stream 0 1))
+(show (head stream))  ;; 0
+(show (head (nth-from stream 4))) ;; 4
+(define stream (nth-from stream 100))
+(show (head stream)) ;; 100
+
+(define (stream-map func . streams)
+  (cons (apply func (map head streams))
+        (lambda ()
+          (apply stream-map (append (list func) (map tail streams))))))
+(define sqrn-minus-n
+  (stream-map - (stream-map sqr (make-stream 0 1)) (make-stream 0 1)))
+(show (head (nth-from sqrn-minus-n 5))) ;; 20
+(show (head (nth-from sqrn-minus-n 100))) ;; 9900
+
+
+;;; N-queens
+(title "N-queens")
+(define (NQU size)
+  (define all-cols (interval 1 (+ size 1)))
+  (define (valid? n configuration)
+    (and (none-of? (lambda (col) (= (car configuration) col)) (cdr configuration))
+         (none-of? (lambda (diag) (= (- n (car configuration)) diag))
+                   (map - (interval (+ n 1) (+ size 1)) (cdr configuration)))
+         (none-of? (lambda (cdiag) (= (+ n (car configuration)) cdiag))
+                   (map + (interval (+ n 1) (+ size 1)) (cdr configuration)))))
+
+  (define (choose-col n)
+    (if (= n (+ size 1))
+        (list '())
+        (filter
+         (lambda (configuration) (valid? n configuration))
+         (flatmap
+          (lambda (configuration)
+            (map (lambda (sel) (cons sel configuration))
+                 all-cols))
+          (choose-col (+ n 1))))))
+  (choose-col 1))
+
+(show (length (NQU 6))) ;; 92
+
+;;; let-bindings
+(title "let-bindins")
+(define var1 1)
+(show (let ((var1 2)
+               (y (lambda () var1)))
+           (y)))  ;; 1
+(show (let* ((var1 2)
+                (y (lambda () var1)))
+           (y)))  ;; 2
+(show (letrec ((var1 2)
+                  (y (lambda () var1)))
+           (y)))  ;; 2
+(show (let* ((var1 2)
+             (y var1))
+           y))  ;; 2
+
+;;; closure
 (title "closure")
 (define (make-balance init)
   (define (make-balance-impl balance transaction-log)
@@ -599,10 +321,22 @@
 (define account (account 'reset 5))
 (show-balance-details account)
 
-(title "pairs and lists")
-
-(define lst '(1.1 1 2 #\c))
-(show (eqv? (cadr lst) 1))
-(show (eqv? (list-ref lst (- (length lst) 1)) #\c))
-(show (memq 2 lst))
-(show (memq 100 lst))
+;; Balance = 100
+;; Transaction log: ()
+;; Balance = 200
+;; Transaction log: ((add 100))
+;; Balance = 185
+;; Transaction log: ((add 100) (add -20) (add 5))
+;; Balance = 0
+;; Transaction log: ((add 100) (add -20) (add 5) (clear 185))
+;; unknown action (miaow~~~~ 555 555 -_-||)
+;; Balance = 0
+;; Transaction log: ((add 100) (add -20) (add 5) (clear 185))
+;; Balance = 185
+;; Transaction log: ((add 100) (add -20) (add 5) (clear 185) (revert 1))
+;; Balance = 0
+;; Transaction log: ((add 100) (add -20) (add 5) (clear 185) (revert 1) (revert 1))
+;; Balance = 0
+;; Transaction log: ((add 100) (add -20) (add 5) (clear 185) (revert 1) (revert 1) (revert 2))
+;; Balance = 180
+;; Transaction log: ((add 100) (add -20))
